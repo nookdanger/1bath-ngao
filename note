@@ -1,0 +1,17 @@
+brew install python
+python3 -m ensurepip --upgrade
+python3 -m pip install fastapi uvicorn jinja2
+pip3 install fastapi uvicorn jinja2
+uvicorn main:app --reload
+
+-------------
+Step 1: ติดตั้ง Python (ถ้ายังไม่มี)
+ไปที่: https://www.python.org/downloads/windows
+
+ดาวน์โหลด Python 3.10+ (แนะนำ 3.12)
+
+✅ สำคัญ: ให้ติ๊ก ✔️ Add Python to PATH ตอนติดตั้ง
+
+ติดตั้งแบบ “Install Now”
+pip install fastapi uvicorn jinja2
+python3 -m pip install python-multipart
