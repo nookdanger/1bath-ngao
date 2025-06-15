@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8">
+  <title>กราฟสัดส่วนสถานะดำเนินการ</title>
+</head>
+<body>
+  <h2>สัดส่วนสถานะดำเนินการ</h2>
+  <canvas id="disposal" width="400" height="400"></canvas>
+
+  <script>
+
+    const disposal_data = {
+      labels: {{ disposal_labels | tojson }},
+      datasets: [{
+        data: {{ disposal_values | tojson }},
+        backgroundColor: [
+        '#FF6384',  // แดงชมพู
+        '#36A2EB',  // ฟ้า
+        '#FFCE56',  // เหลือง
+        '#4BC0C0',  // ฟ้าอมเขียว
+        '#9966FF',  // ม่วง
+        '#FF9F40',  // ส้ม
+        '#C9CBCF',  // เทาอ่อน
+        '#8BC34A',  // เขียวอ่อน
+        '#F06292',  // ชมพูเข้ม
+        '#BA68C8'   // ม่วงอ่อน
+      ],
+        hoverOffset: 10
+      }]
+    };
+
+
+   
+
+    const disposal_config = {
+      type: 'pie',
+      data: disposal_data,
+      options: {
+        plugins: {
+          legend: {
+            position: 'right'
+          },
+          tooltip: {
+            callbacks: {
+              label: function(context) {
+                return `${context.label}: ${context.formattedValue}%`;
+              }
+            }
+          }
+        }
+      }
+    };
+
+    new Chart(document.getElementById('disposal'), disposal_config);
+  </script>
+</body>
+</html>

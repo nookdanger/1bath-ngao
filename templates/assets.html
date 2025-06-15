@@ -1,0 +1,279 @@
+<!-- templates/dashboard.html -->
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8">
+  <title>Dashboard ทรัพย์สิน 1 บาท</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <script>
+document.addEventListener("DOMContentLoaded", () => {
+    document.querySelectorAll("select, button, input").forEach(el => {
+      el.addEventListener("click", e => e.stopPropagation());
+    });
+  });
+    function previewImage(input, previewId) {
+      const file = input.files[0];
+      const preview = document.getElementById(previewId);
+      if (file && file.type.startsWith("image/")) {
+        const reader = new FileReader();
+        reader.onload = e => preview.src = e.target.result;
+        reader.readAsDataURL(file);
+      } else {
+        preview.src = "";
+      }
+    }
+
+    function showImageInModal(src) {
+      const modalImage = document.getElementById("modalImage");
+      modalImage.src = src;
+      const modal = new bootstrap.Modal(document.getElementById("imageModal"));
+      modal.show();
+    }
+
+function handleStatusChange(selectElement, assetId) {
+  const selectedValue = selectElement.value;
+  const statusText = selectElement.options[selectElement.selectedIndex].text;
+
+  if (selectedValue !== "") {
+    document.getElementById("modalAssetId").value = assetId;
+    document.getElementById("modalDisposalStatus").value = selectedValue;
+    document.getElementById("modalDisposalDescription").value = statusText;
+
+    const modalElement = document.getElementById("statusModal");
+    if (modalElement) {
+      const modal = new bootstrap.Modal(modalElement);
+      modal.show();
+    } else {
+      console.error("Modal element not found!");
+    }
+  }
+}
+
+
+
+function enableEdit(assetId) {
+  const select = document.getElementById(`select-${assetId}`);
+  const fileInput = document.getElementById(`file-${assetId}`);
+  const saveBtn = document.getElementById(`saveBtn-${assetId}`);
+  const selectStatus = document.getElementById(`select-asset_status-${assetId}`);
+
+  if (select) select.disabled = false;
+  if (selectStatus) selectStatus.disabled = false;
+  if (fileInput) fileInput.disabled = false;
+  if (saveBtn) saveBtn.classList.remove("d-none");
+}
+
+
+
+
+
+  </script>
+</head>
+   <form method="get" action="/assets" class="mb-3">
+    <div class="header">
+        <label>หน่วยงาน:</label>
+          <select id="cost_center" name="cost_center"  disabled>
+            <option value="">-- ทั้งหมด --</option>
+            <option value="A303701000" {{ 'selected' if request.query_params.get('cost_center') == 'A303701000' else '' }}>แผนกบริหาร</option>
+            <option value="A303701010" {{ 'selected' if request.query_params.get('cost_center') == 'A303701010' else '' }}>แผนกก่อสร้างปฏิบัติการและบำรุงรักษา(1010)</option>
+            <option value="A303701011" {{ 'selected' if request.query_params.get('cost_center') == 'A303701011' else '' }}>แผนกก่อสร้างปฏิบัติการและบำรุงรักษา(1011)</option>
+            <option value="A303701020" {{ 'selected' if request.query_params.get('cost_center') == 'A303701020' else '' }}>แผนกบริการลูกค้า</option>
+            <option value="A303701030" {{ 'selected' if request.query_params.get('cost_center') == 'A303701030' else '' }}>แผนกสนับสนุน</option>
+            <option value="A303701040" {{ 'selected' if request.query_params.get('cost_center') == 'A303701040' else '' }}>แผนกมิเตอร์และหม้อแปลง</option>
+          </select>
+      </div>
+    <a href="/main?disposal_status={{ request.query_params.get('disposal_status') }}&cost_center={{request.query_params.get('cost_center')}}" class="btn btn-outline-secondary mt-4">⬅️ กลับหน้าหลัก</a>
+ 
+    <div class="input-group">
+      <label class="input-group-text">สถานะ:</label>
+      <select class="form-select" name="disposal_status" disabled>
+        <option value="">-- ทั้งหมด --</option>
+        <option value="1" {{ 'selected' if request.query_params.get('disposal_status') == '1' else '' }}>รอดำเนินการจำหน่าย</option>
+        <option value="2" {{ 'selected' if request.query_params.get('disposal_status') == '2' else '' }}>จัดทำหนังสือขอความเห็นชอบ</option>
+        <option value="3" {{ 'selected' if request.query_params.get('disposal_status') == '3' else '' }}>แต่งตั้งคณะกรรมการตรวจสอบข้อเท็จจริง</option>
+        <option value="4" {{ 'selected' if request.query_params.get('disposal_status') == '4' else '' }}>รายงานผลการตรวจสอบ</option>
+        <option value="5" {{ 'selected' if request.query_params.get('disposal_status') == '5' else '' }}>ขออนุมัติจำหน่าย</option>
+        <option value="6" {{ 'selected' if request.query_params.get('disposal_status') == '6' else '' }}>ดำเนินการจำหน่าย</option>
+        <option value="7" {{ 'selected' if request.query_params.get('disposal_status') == '7' else '' }}>จำหน่ายแล้วเสร็จ</option>
+        <option value="8" {{ 'selected' if request.query_params.get('disposal_status') == '8' else '' }}>ตัดจำหน่ายในระบบ</option>
+        <option value="9" {{ 'selected' if request.query_params.get('disposal_status') == '9' else '' }}>รายงานผลการจำหน่าย</option>
+        </select>
+    </div>
+  </form>
+  <table class="table table-bordered table-striped mt-3 align-middle">
+    <thead class="table-dark">
+      <tr>
+        <th>id</th>
+        <th>สินทรัพย์</th>
+        <th>เลขที่สินค้าคงคลัง</th>
+        <th>คำอธิบายของสินทรัพย์</th>
+        <th>มูลค่าทางบัญชี</th>
+        <th>สถานะสินทรัพย์</th>
+        <th>สถานะดำเนินการ</th>
+        <th>รูป</th>
+        <th>อัปเดต</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for asset in assets %}
+      <form method="post" action="/update-status" enctype="multipart/form-data">
+        <tr >
+          <td onclick="window.location='/asset/{{ asset['id'] }}'" style="cursor: pointer;" >{{ asset["id"] }}</td>
+          <td>{{ asset["asset_id"] }}</td>
+          <td>{{ asset["inventory_code"] }}</td>
+          <td>{{ asset["description"] }}</td>
+          <td style="text-align: right;">
+            <b style="color:  {% if asset["book_value"] <= 1 %} #28a745{% else %} red {% endif %}; font-weight: bold;">
+              {{ "{:,.2f}".format(asset["book_value"] or 0) }}
+            </b>
+          </td>
+          <td>
+            <select name="asset_status"
+            disabled
+              class="form-select form-select-sm" id="select-asset_status-{{ asset['id'] }}">
+              <option value="" {% if asset["asset_status"] not in ['0', '1'] %}selected{% endif %}>เลือก</option>
+              <option value="0" {% if asset["asset_status"] == '0' %}selected{% endif %}>ใช้งานอยู่</option>
+              <option value="1" {% if asset["asset_status"] == '1' %}selected{% endif %}>ชำรุด</option>
+            </select>
+          </td>
+          <td>
+            <select name="disposal_status"
+        class="form-select form-select-sm"
+        id="select-{{ asset['id'] }}"
+        disabled
+        onchange="handleStatusChange(this, '{{ asset['id'] }}')">
+            
+              <option value="" {% if asset["disposal_status"] == '' %}selected{% endif %}>เลือก</option>
+              <option value="1" {% if asset["disposal_status"] == '1' %}selected{% endif %}>รอดำเนินการจำหน่าย</option>
+              <option value="2" {% if asset["disposal_status"] == '2' %}selected{% endif %}>จัดทำหนังสือขอความเห็นชอบ</option>
+              <option value="3" {% if asset["disposal_status"] == '3' %}selected{% endif %}>แต่งตั้งคณะกรรมการตรวจสอบข้อเท็จจริง</option>
+              <option value="4" {% if asset["disposal_status"] == '4' %}selected{% endif %}>รายงานผลการตรวจสอบ</option>
+              <option value="5" {% if asset["disposal_status"] == '5' %}selected{% endif %}>ขออนุมัติจำหน่าย</option>
+              <option value="6" {% if asset["disposal_status"] == '6' %}selected{% endif %}>ดำเนินการจำหน่าย</option>
+              <option value="7" {% if asset["disposal_status"] == '7' %}selected{% endif %}>จำหน่ายแล้วเสร็จ</option>
+              <option value="8" {% if asset["disposal_status"] == '8' %}selected{% endif %}>ตัดจำหน่ายในระบบ SAP</option>
+              <option value="9" {% if asset["disposal_status"] == '9' %}selected{% endif %}>รายงานผลการจำหน่าย</option>
+            </select>
+          </td>
+          <td>
+            <img id="preview-{{ asset['id'] }}"
+            src="data:image/png;base64,{{ asset['image'] if asset['image'] else '' }}"
+            alt="Preview"
+            class="border mt-1 img-thumbnail"
+            style="max-height: 100px; cursor: pointer; "
+            onclick="showImageInModal(this.src)">
+
+              
+              {% if asset["image"] %}
+            <div class="text-center mt-1">
+                <a href="/delete-image/{{ asset['id'] }}" class="btn btn-sm btn-outline-danger">🗑️ ลบรูป</a>
+            </div>
+            {% else %}
+            <label class="btn btn-outline-secondary btn-sm w-100" >
+                📷 เลือกรูป
+                <input type="file"
+       name="image_file"
+       accept="image/*"
+       hidden
+       id="file-{{ asset['id'] }}"
+       onchange="previewImage(this, 'preview-{{ asset['id'] }}')"
+       disabled>
+
+              </label>
+            {% endif %}
+          </td>
+          <td>
+            <input type="hidden" name="id" value="{{ asset['id'] }}">
+<div class="d-flex gap-1">
+   {% if asset["book_value"] <= 1 %}
+  <button type="button" class="btn btn-warning btn-sm" onclick="enableEdit('{{ asset['id'] }}')">✏️ แก้ไข</button>
+  {% endif %}
+  <button type="submit" class="btn btn-success btn-sm d-none" id="saveBtn-{{ asset['id'] }}">💾 บันทึก</button>
+</div>
+
+
+          </td>
+        </tr>
+      </form>
+      {% endfor %}
+    </tbody>
+  </table>
+
+  <!-- Modal viewer -->
+  <div class="modal fade" id="imageModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+      <div class="modal-content bg-transparent border-0 shadow-none">
+        <div class="modal-body text-center">
+          <img id="modalImage" src="" class="img-fluid rounded" style="max-height: 80vh;">
+        </div>
+      </div>
+    </div>
+  </div>
+
+<!-- Modal for log-status -->
+<div class="modal fade" id="statusModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog">
+   <form id="logStatusForm" class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">กรอกรายละเอียดการเปลี่ยนสถานะ</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <input type="hidden" name="asset_id" id="modalAssetId">
+        <input type="hidden" name="status_code" id="modalDisposalStatus">
+        <input type="hidden" name="status_description" id="modalDisposalDescription">
+        <div class="mb-3">
+          <label class="form-label">เลขที่เอกสาร / ref เอกสาร:</label>
+    <input type="text" name="ref_document" class="form-control" required id="modalRefDocument">
+
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-primary">💾 บันทึก</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+
+
+
+  <!-- Bootstrap JS bundle -->
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+  <script>
+document.getElementById("logStatusForm").addEventListener("submit", async function(event) {
+  event.preventDefault(); // ป้องกันการ reload หน้า
+
+  const assetId = document.getElementById("modalAssetId").value;
+  const statusCode = document.getElementById("modalDisposalStatus").value;
+  const statusDescription = document.getElementById("modalDisposalDescription").value;
+  const refDocument = document.getElementById("modalRefDocument").value;
+
+  const formData = new FormData();
+  formData.append("asset_id", assetId);
+  formData.append("status_code", statusCode);
+  formData.append("status_description", statusDescription);
+  formData.append("ref_document", refDocument);
+
+  const response = await fetch("/log-status", {
+    method: "POST",
+    body: formData,
+  });
+
+  const result = await response.json();
+
+if (result.message === "OK") {
+  const modalElement = bootstrap.Modal.getInstance(document.getElementById("statusModal"));
+  modalElement.hide();
+
+  // เคลียร์ค่า
+  document.getElementById("modalRefDocument").value = "";
+
+}
+
+});
+</script>
+
+
+</html>

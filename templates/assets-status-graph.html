@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8">
+  <title>กราฟสัดส่วนสถานะทรัพย์สิน</title>
+</head>
+<body>
+  <h2>สัดส่วนสถานะทรัพย์สิน</h2>
+  <canvas id="assets" width="400" height="400"></canvas>
+
+  <script>
+
+    const assets_data = {
+      labels: {{ assets_labels | tojson }},
+      datasets: [{
+        data: {{ assets_values | tojson }},
+        backgroundColor: [
+        '#FF6384',  // แดงชมพู
+        '#36A2EB',  // ฟ้า
+        '#FFCE56',  // เหลือง
+        '#4BC0C0',  // ฟ้าอมเขียว
+        '#9966FF',  // ม่วง
+        '#FF9F40',  // ส้ม
+        '#C9CBCF',  // เทาอ่อน
+        '#8BC34A',  // เขียวอ่อน
+        '#F06292',  // ชมพูเข้ม
+        '#BA68C8'   // ม่วงอ่อน
+      ],
+        hoverOffset: 10
+      }]
+    };
+
+
+    const assets_config = {
+      type: 'pie',
+      data: assets_data,
+      options: {
+        plugins: {
+          legend: {
+            position: 'right'
+          },
+          tooltip: {
+            callbacks: {
+              label: function(context) {
+                return `${context.label}: ${context.formattedValue}%`;
+              }
+            }
+          }
+        }
+      }
+    };
+
+    new Chart(document.getElementById('assets'), assets_config);
+  </script>
+</body>
+</html>
