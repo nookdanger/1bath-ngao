@@ -42,19 +42,23 @@ def get_assets():
     conn.close()
     return assets
 
+
+def checkEmptyNone(value: str):
+    return value and value != "None" and value != ""
+
 @app.get("/asset", response_class=HTMLResponse)
 def dashboard(request: Request, disposal_status: str = None ,cost_center: str = None):
     conn = sqlite3.connect(DB_PATH)
     conn.row_factory = sqlite3.Row
     cursor = conn.cursor()
-    print("kkk")
-    if disposal_status and disposal_status != "None" and cost_center and cost_center != "None":
+    print("cost_center: ",cost_center ," disposal_status: ",disposal_status)
+    if checkEmptyNone(disposal_status) and checkEmptyNone(cost_center):
         print("kkk1 ",disposal_status ,cost_center)
         cursor.execute("SELECT * FROM assets WHERE disposal_status = ? and cost_center= ? ORDER BY book_value,id ", (disposal_status,cost_center,))
-    elif disposal_status and disposal_status != "None" and cost_center and not cost_center != "None":
+    elif checkEmptyNone(disposal_status) and  not checkEmptyNone(cost_center):
         print("kkk2")
         cursor.execute("SELECT * FROM assets WHERE disposal_status = ? ORDER BY book_value,id ", (disposal_status,))
-    elif disposal_status and not disposal_status != "None" and  cost_center and cost_center != "None":
+    elif not checkEmptyNone(disposal_status) and  checkEmptyNone(cost_center):
         print("kkk")
         cursor.execute("SELECT * FROM assets WHERE cost_center = ? ORDER BY book_value,id ", (cost_center,))
     else:
