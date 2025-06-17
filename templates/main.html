@@ -10,7 +10,7 @@
       const costCenter = document.getElementById('cost_center')?.value || '';
      
       if (disposalStatus == "None"){
-         alert(disposalStatus)
+         
         window.location.href = `/asset?cost_center=${costCenter}`;
         
       }else{
@@ -18,6 +18,20 @@
         window.location.href = `/asset?disposal_status=${disposalStatus}&cost_center=${costCenter}`;
       }
     }
+
+    function goToAssetPageฺิByAssetStatus(asset_status) {
+      const costCenter = document.getElementById('cost_center')?.value || '';
+     
+      if (asset_status == "None"){
+         
+        window.location.href = `/asset?cost_center=${costCenter}`;
+        
+      }else{
+          // alert(disposalStatus)
+        window.location.href = `/asset?asset_status=${asset_status}&cost_center=${costCenter}`;
+      }
+    }
+
   </script>
   <style>
     * {
@@ -146,7 +160,6 @@
     <div class="sidebar">
       <h2>การไฟฟ้างาว</h2>
       <a href="/main">Dashboard</a>
-      <a href="#">Upload File</a>
     </div>
 
     <div class="content">
@@ -172,7 +185,12 @@
       </div>
 
       <div class="main-layout">
-
+<div class="chart-box">
+            <h3></h3>
+            <div style="width: 500px; height: 500px;">
+              {% include 'success-status-graph.html' %}
+            </div>
+          </div>
         <!-- สถานะทรัพย์สิน -->
         <div class="left-column">
           <div class="chart-box">
@@ -193,7 +211,7 @@
               </thead>
               <tbody>
                 {% for status in asset_status %}
-                <tr>
+                  <tr onclick="goToAssetPageฺิByAssetStatus('{{ status['asset_status_val'] }}')">
                   <td>{{ assets_status_mapping[status["asset_status_val"] | string] | default("ไม่ระบุ") }}</td>
                   <td>{{ '{:,.2f}'.format(status["total_book_value"]) }}</td>
                   <td>{{ status["asset_count"] }}</td>

@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8">
+  <title>ความสำเร็จของการจำหน่ายทรัพย์สิน</title>
+</head>
+<body>
+  <h2>ความสำเร็จของการจำหน่ายทรัพย์สิน</h2>
+  <canvas id="success" width="400" height="400"></canvas>
+
+  <script>
+
+    const success_data = {
+      labels: ["ใช้งานอยู่","รอจำหน่าย","จำหน่ายสำเร็จ"],
+      datasets: [{
+        data: {{ success_values | tojson }},
+        backgroundColor: [
+        '#8BC34A', // เขียวอ่อน
+        '#FF9F40',  // ส้ม
+        '#C9CBCF',  // เทาอ่อน
+  
+      ],
+        hoverOffset: 10
+      }]
+    };
+
+
+   
+
+    const success_config = {
+      type: 'pie',
+      data: success_data,
+      options: {
+        plugins: {
+          legend: {
+            position: 'right'
+          },
+          tooltip: {
+            callbacks: {
+              label: function(context) {
+                return `${context.label}: ${context.formattedValue}%`;
+              }
+            }
+          }
+        }
+      }
+    };
+
+    new Chart(document.getElementById('success'), success_config);
+  </script>
+</body>
+</html>

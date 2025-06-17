@@ -58,19 +58,23 @@ def checkEmptyNone(value: str):
     return value and value != "None" and value != ""
 
 @app.get("/asset", response_class=HTMLResponse)
-def dashboard(request: Request, disposal_status: str = None ,cost_center: str = None):
+def dashboard(request: Request, disposal_status: str = "" ,cost_center: str = "", asset_status:str =""):
     conn = sqlite3.connect(DB_PATH)
     conn.row_factory = sqlite3.Row
     cursor = conn.cursor()
     print("cost_center: ",cost_center ," disposal_status: ",disposal_status)
     if checkEmptyNone(disposal_status) and checkEmptyNone(cost_center):
-        print("kkk1 ",disposal_status ,cost_center)
         cursor.execute("SELECT * FROM assets WHERE disposal_status = ? and cost_center= ? ORDER BY book_value,id ", (disposal_status,cost_center,))
     elif checkEmptyNone(disposal_status) and  not checkEmptyNone(cost_center):
-        print("kkk2")
         cursor.execute("SELECT * FROM assets WHERE disposal_status = ? ORDER BY book_value,id ", (disposal_status,))
-    elif not checkEmptyNone(disposal_status) and  checkEmptyNone(cost_center):
-        print("kkk")
+  
+     
+    elif checkEmptyNone(asset_status) and checkEmptyNone(cost_center):
+        cursor.execute("SELECT * FROM assets WHERE asset_status = ? and cost_center= ? ORDER BY book_value,id ", (asset_status,cost_center,))
+    elif checkEmptyNone(asset_status) and  not checkEmptyNone(cost_center):
+        cursor.execute("SELECT * FROM assets WHERE asset_status = ? ORDER BY book_value,id ", (asset_status,))
+
+    elif  not checkEmptyNone(asset_status) and not checkEmptyNone(asset_status) and  checkEmptyNone(cost_center):
         cursor.execute("SELECT * FROM assets WHERE cost_center = ? ORDER BY book_value,id ", (cost_center,))
     else:
         cursor.execute("SELECT * FROM assets ORDER BY book_value,id ")
@@ -189,6 +193,26 @@ def dashboard(request: Request, cost_center: str = None ):
 
 
 
+
+    cursor = conn.cursor()
+    base_sql = """
+        SELECT
+            ROUND(SUM(CASE WHEN asset_status = '2010' AND (disposal_status IS NULL OR disposal_status = '') THEN 1 ELSE 0 END) * 100.0 / COUNT(*), 2) AS percent_in_use,
+            ROUND(SUM(CASE WHEN asset_status != '2010' AND disposal_status IN ('1','2','3','4','5','6','7','8') THEN 1 ELSE 0 END) * 100.0 / COUNT(*), 2) AS percent_waiting_disposal,
+            ROUND(SUM(CASE WHEN asset_status != '2010' AND disposal_status = '9' THEN 1 ELSE 0 END) * 100.0 / COUNT(*), 2) AS percent_disposed
+        FROM assets
+        {where_clause}
+        """
+    sql = base_sql.format(where_clause=where_clause)
+    params5 = ()
+    if cost_center:
+        where_clause = "WHERE cost_center = ?"
+        params5 = (cost_center,)
+    cursor.execute(sql, params5)
+    success_status = cursor.fetchone()
+
+    success_values = list(success_status)
+
     conn.close()
     return templates.TemplateResponse("main.html", {
         "request": request,
@@ -200,7 +224,8 @@ def dashboard(request: Request, cost_center: str = None ):
         "asset_status":asset_status,
         "asset_status_desc":asset_status_desc,
         "assets_status_mapping": assets_status_mapping,
-        "status_mapping": status_mapping
+        "status_mapping": status_mapping,
+        "success_values": success_values
     })
 
 @app.get("/graph", response_class=HTMLResponse)
@@ -246,23 +271,23 @@ async def update_status(
     """, (disposal_status,asset_status, image_base64, id))
     conn.commit()
     conn.close()
-    return RedirectResponse(url=f"/asset?disposal_status={disposal_status_selected}&cost_center={cost_center}", status_code=303)
+    return RedirectResponse(url=f"/asset?disposal_status={disposal_status_selected}&cost_center={cost_center}&asset_status={asset_status}", status_code=303)
 
 
 
 @app.get("/delete-image/{id}")
-def delete_image(id: int):
+def delete_image(id: int,disposal_status:str = "",cost_center:str ="",asset_status:str=""):
     conn = sqlite3.connect(DB_PATH)
     cursor = conn.cursor()
     cursor.execute("UPDATE assets SET image = NULL WHERE id = ?", (id,))
     conn.commit()
     conn.close()
-    return RedirectResponse(url="/asset", status_code=303)
+    return RedirectResponse(url=f"/asset?disposal_status={disposal_status}&cost_center={cost_center}&asset_status={asset_status}", status_code=303)
 
 
 
 @app.get("/asset/{id}", response_class=HTMLResponse)
-def asset_detail(request: Request, id: int):
+def asset_detail(request: Request, id: int,cost_center:str="",disposal_status:str="" ,asset_status:str=""):
     conn = sqlite3.connect(DB_PATH)
     conn.row_factory = sqlite3.Row
     cursor = conn.cursor()
@@ -271,7 +296,7 @@ def asset_detail(request: Request, id: int):
     asset = cursor.fetchone()
 
     cursor.execute("""
-        SELECT status_code, status_description, ref_document, changed_at
+        SELECT id,status_code, status_description, ref_document, changed_at
         FROM disposal_status_log
         WHERE asset_id = ?
         ORDER BY changed_at
@@ -280,6 +305,9 @@ def asset_detail(request: Request, id: int):
 
     return templates.TemplateResponse("asset_detail.html", {
         "request": request,
+        "cost_center":cost_center,
+        "disposal_status": disposal_status,
+        "asset_status":asset_status,
         "asset": asset,
         "logs": logs
     })
@@ -326,6 +354,28 @@ def log_disposal_status(
     conn.commit()
     conn.close()
     return JSONResponse(content={"message": "OK"})
+
+
+@app.post("/assets/{asset_log_id}/delete")
+def delete_asset(request: Request,asset_log_id: int ,disposal_status: str="",cost_center:str="",asset_status:str=""):
+    conn = sqlite3.connect(DB_PATH)
+    conn.row_factory = sqlite3.Row
+    cursor = conn.cursor()
+    cursor.execute("SELECT asset_id FROM disposal_status_log WHERE id = ?", (asset_log_id,))
+    row = cursor.fetchone()
+
+    if row is None:
+        conn.close()
+        return RedirectResponse(url="/assets", status_code=303)
+
+    asset_id = row["asset_id"]
+    # ลบ log
+    cursor.execute("DELETE FROM disposal_status_log WHERE id = ?", (asset_log_id,))
+    conn.commit()
+    conn.close()
+
+    # redirect กลับไปหน้าแสดง asset รายตัว
+    return RedirectResponse(url=f"/asset/{asset_id}?disposal_status={disposal_status}&cost_center={cost_center}&asset_status={asset_status}", status_code=303)
 
 
 

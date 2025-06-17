@@ -57,11 +57,13 @@ function previewImage(input, previewId) {
       const fileInput = document.getElementById(`file-${assetId}`);
       const saveBtn = document.getElementById(`saveBtn-${assetId}`);
       const selectStatus = document.getElementById(`select-asset_status-${assetId}`);
+      const editbt = document.getElementById(`edit-${assetId}`);
 
       if (select) select.disabled = false;
       if (selectStatus) selectStatus.disabled = false;
       if (fileInput) fileInput.disabled = false;
       if (saveBtn) saveBtn.classList.remove("d-none");
+      if (editbt) editbt.classList.add("d-none");
     }
 
 
@@ -197,10 +199,9 @@ function previewImage(input, previewId) {
     <div class="sidebar">
       <h2>การไฟฟ้างาว</h2>
       <a href="/main">Dashboard</a>
-      <a href="#">Upload File</a>
       <a
-        href="/main?disposal_status={{ request.query_params.get('disposal_status') }}&cost_center={{request.query_params.get('cost_center')}}">⬅️
-        กลับหน้าหลัก</a>
+        href="/main?disposal_status={{ request.query_params.get('disposal_status') }}&cost_center={{request.query_params.get('cost_center')}}&asset_status={{request.query_params.get('asset_status')}}">⬅️
+        กลับ</a>
     </div>
 
     <div class="content">
@@ -224,7 +225,7 @@ function previewImage(input, previewId) {
           </select>
         </div>
         <div class="input-group">
-          <label class="input-group-text">สถานะ:</label>
+          <label class="input-group-text">สถานะของสินทรัพย์:</label>
           <select class="form-select" name="disposal_status" disabled>
             <option value="">-- ทั้งหมด --</option>
             <option value="1" {{ 'selected' if request.query_params.get('disposal_status')=='1' else '' }}>
@@ -245,6 +246,38 @@ function previewImage(input, previewId) {
               ตัดจำหน่ายในระบบ</option>
             <option value="9" {{ 'selected' if request.query_params.get('disposal_status')=='9' else '' }}>
               รายงานผลการจำหน่าย</option>
+          </select>
+        </div>
+        <div class="input-group">
+          <label class="input-group-text">สถานะการดำเนินการ:</label>
+          <select class="form-select" name="asset_status" disabled>
+            <option value="">-- ทั้งหมด --</option>
+            <option value="1" {{ 'selected' if request.query_params.get('asset_status')=='2010' else '' }}>
+              ติดตั้ง/ใช้งาน</option>
+            <option value="2" {{ 'selected' if request.query_params.get('asset_status')=='2020' else '' }}>
+              ชำรุด</option>
+            <option value="3" {{ 'selected' if request.query_params.get('asset_status')=='2030' else '' }}>
+              สภาพดีแต่ไม่ได้ใช้งาน</option>
+            <option value="4" {{ 'selected' if request.query_params.get('asset_status')=='2040' else '' }}>
+              อยู่ระหว่างขออนุมัติจำหน่าย</option>
+            <option value="5" {{ 'selected' if request.query_params.get('asset_status')=='2050' else '' }}>
+              สูญหาย</option>
+            <option value="6" {{ 'selected' if request.query_params.get('asset_status')=='2060' else '' }}>
+              ให้เช่า</option>
+            <option value="7" {{ 'selected' if request.query_params.get('asset_status')=='3010' else '' }}>
+              จำหน่าย(ขาย)</option>
+            <option value="8" {{ 'selected' if request.query_params.get('asset_status')=='3020' else '' }}>
+              จำหน่าย(แลกเปลี่ยน)</option>
+            <option value="9" {{ 'selected' if request.query_params.get('asset_status')=='3030' else '' }}>
+              จำหน่าย(โอน)</option>
+                <option value="9" {{ 'selected' if request.query_params.get('asset_status')=='3040' else '' }}>
+              จำหน่าย(แปรสภาพ)</option>
+                <option value="9" {{ 'selected' if request.query_params.get('asset_status')=='3050' else '' }}>
+              จำหน่าย(ทำลาย)</option>
+                <option value="9" {{ 'selected' if request.query_params.get('asset_status')=='4010' else '' }}>
+              จำหน่ายเป็นสูญ</option>
+              <option value="9" {{ 'selected' if request.query_params.get('asset_status')=='4020' else '' }}>
+              สิ้นสุดสัญญาเช่า</option>
           </select>
         </div>
       </form>
@@ -269,10 +302,10 @@ function previewImage(input, previewId) {
           {% for asset in assets %}
           <form method="post" action="/update-status" enctype="multipart/form-data">
             <input type="hidden" value="{{ request.query_params.get('cost_center') }}" name="cost_center">
-            <input type="hidden" value="{{ request.query_params.get('disposal_status') }}"
+            <input type="hidden" value="{{ request.query_params.get('disposal_status')}}"
               name="disposal_status_selected">
             <tr>
-              <td onclick="window.location='/asset/{{ asset['id'] }}'" style="cursor: pointer;">{{ loop.index }}</td>
+              <td onclick="window.location='/asset/{{ asset['id'] }}?cost_center={{ request.query_params.get('cost_center') }}&disposal_status={{ request.query_params.get('disposal_status')}}&asset_status={{ request.query_params.get('asset_status')}}'" style="cursor: pointer;">{{ loop.index }}</td>
               <td>{{ asset["asset_id"] }}</td>
               <td>{{ asset["sub_number"] }}</td>
               <td>{{ asset["description"] }}</td>
@@ -334,7 +367,7 @@ function previewImage(input, previewId) {
 
                 {% if asset["image"] %}
                 <div class="text-center mt-1">
-                  <a href="/delete-image/{{ asset['id'] }}" class="btn btn-sm btn-outline-danger">🗑️ ลบรูป</a>
+                  <a href="/delete-image/{{ asset['id'] }}?cost_center={{request.query_params.get('cost_center')}}&disposal_status={{request.query_params.get('disposal_status')}}&asset_status={{request.query_params.get('asset_status')}}" class="btn btn-sm btn-outline-danger">🗑️ ลบรูป</a>
                 </div>
                 {% else %}
                 <label class="btn btn-outline-secondary btn-sm w-100">
@@ -349,7 +382,7 @@ function previewImage(input, previewId) {
                 <input type="hidden" name="id" value="{{ asset['id'] }}">
                 <div class="d-flex gap-1">
 
-                  <button type="button" class="btn btn-warning btn-sm" onclick="enableEdit('{{ asset['id'] }}')">✏️
+                  <button type="button" class="btn btn-warning btn-sm" id="edit-{{ asset['id'] }}" onclick="enableEdit('{{ asset['id'] }}')">✏️
                     แก้ไข</button>
 
                   <button type="submit" class="btn btn-success btn-sm d-none" id="saveBtn-{{ asset['id'] }}">💾
