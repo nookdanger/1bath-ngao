@@ -335,7 +335,7 @@ function previewImage(input, previewId) {
                 <label class="btn btn-outline-secondary btn-sm w-100">
                   📷 เลือกรูป
                   <input type="file" name="image_file" accept="image/*" hidden id="file-{{ asset['id'] }}"
-                    onchange="previewImage(this, 'preview-{{ asset['id'] }}')" disabled>
+                    onchange="previewImage(this, 'preview-{{ asset['id'] }}')" disabled capture="environment">
 
                 </label>
                 {% endif %}
