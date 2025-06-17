@@ -8,7 +8,15 @@
   <script>
     function goToAssetPage(disposalStatus) {
       const costCenter = document.getElementById('cost_center')?.value || '';
-      window.location.href = `/asset?disposal_status=${disposalStatus}&cost_center=${costCenter}`;
+     
+      if (disposalStatus == "None"){
+         alert(disposalStatus)
+        window.location.href = `/asset?cost_center=${costCenter}`;
+        
+      }else{
+          // alert(disposalStatus)
+        window.location.href = `/asset?disposal_status=${disposalStatus}&cost_center=${costCenter}`;
+      }
     }
   </script>
   <style>
