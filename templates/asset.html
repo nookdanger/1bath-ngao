@@ -209,7 +209,7 @@ function previewImage(input, previewId) {
         <div class="header">
           <label>หน่วยงาน:</label>
           <select id="cost_center" name="cost_center" disabled>
-            <option value="">-- ทั้งหมด --</option>
+            <option value="" >-- ทั้งหมด --</option>
             <option value="A303701000" {{ 'selected' if request.query_params.get('cost_center')=='A303701000' else ''
               }}>แผนกบริหาร</option>
             <option value="A303701010" {{ 'selected' if request.query_params.get('cost_center')=='A303701010' else ''
@@ -318,41 +318,35 @@ function previewImage(input, previewId) {
               <td>
                 <select name="asset_status" disabled class="form-select form-select-sm"
                   id="select-asset_status-{{ asset['id'] }}">
-                  <option value="" {% if asset["asset_status"]=='' %}selected{% endif %}>เลือก</option>
-                  <option value="2020" {% if asset["asset_status"]=='2010' %}selected{% endif %}>ติดตั้ง/ใช้งาน</option> 
-                  <option value="2020" {% if asset["asset_status"]=='2020' %}selected{% endif %}>ชำรุด</option> 
-                  <option value="2030" {% if asset["asset_status"]=='2030' %}selected{% endif %}>สภาพดีแต่ไม่ได้ใช้งาน</option> 
-                  <option value="2040" {% if asset["asset_status"]=='2040' %}selected{% endif %}>อยู่ระหว่างขออนุมัติจำหน่าย</option> 
-                  <option value="2050" {% if asset["asset_status"]=='2050' %}selected{% endif %}>สูญหาย</option> 
-                  <option value="2060" {% if asset["asset_status"]=='2060' %}selected{% endif %}>ให้เช่า</option> 
-                  <option value="3010" {% if asset["asset_status"]=='3010' %}selected{% endif %}>จำหน่าย(ขาย)</option> 
-                  <option value="3020" {% if asset["asset_status"]=='3020' %}selected{% endif %}>จำหน่าย(แลกเปลี่ยน)</option> 
-                  <option value="3030" {% if asset["asset_status"]=='3030' %}selected{% endif %}>จำหน่าย(โอน)</option> 
-                  <option value="3040" {% if asset["asset_status"]=='3040' %}selected{% endif %}>จำหน่าย(แปรสภาพ)</option> 
-                  <option value="3050" {% if asset["asset_status"]=='3050' %}selected{% endif %}>จำหน่าย(ทำลาย)</option> 
-                  <option value="4010" {% if asset["asset_status"]=='4010' %}selected{% endif %}>จำหน่ายเป็นสูญ</option> 
-                  <option value="4020" {% if asset["asset_status"]=='4020' %}selected{% endif %}>สิ้นสุดสัญญาเช่า</option> 
+                  <option value="" disabled {% if asset["asset_status"]=='' %}selected{% endif %}>เลือก</option>
+                  <option value="2010" {% if asset["asset_status"]=='2010' %}selected{% endif %}>2120: ติดตั้ง/ใช้งาน</option> 
+                  <option value="2020" {% if asset["asset_status"]=='2020' %}selected{% endif %}>2020: ชำรุด</option> 
+                  <option value="2030" {% if asset["asset_status"]=='2030' %}selected{% endif %}>2030: สภาพดีแต่ไม่ได้ใช้งาน</option> 
+                  <option value="2040" {% if asset["asset_status"]=='2040' %}selected{% endif %}>2040: อยู่ระหว่างขออนุมัติจำหน่าย</option> 
+                  <option value="2050" {% if asset["asset_status"]=='2050' %}selected{% endif %}>2050: สูญหาย</option> 
+                  <option value="2060" {% if asset["asset_status"]=='2060' %}selected{% endif %}>2060: ให้เช่า</option> 
+                  <option value="3010" {% if asset["asset_status"]=='3010' %}selected{% endif %}>3010: จำหน่าย(ขาย)</option> 
+                  <option value="3020" {% if asset["asset_status"]=='3020' %}selected{% endif %}>3020: จำหน่าย(แลกเปลี่ยน)</option> 
+                  <option value="3030" {% if asset["asset_status"]=='3030' %}selected{% endif %}>3030: จำหน่าย(โอน)</option> 
+                  <option value="3040" {% if asset["asset_status"]=='3040' %}selected{% endif %}>3040: จำหน่าย(แปรสภาพ)</option> 
+                  <option value="3050" {% if asset["asset_status"]=='3050' %}selected{% endif %}>3050: จำหน่าย(ทำลาย)</option> 
+                  <option value="4010" {% if asset["asset_status"]=='4010' %}selected{% endif %}>4010: จำหน่ายเป็นสูญ</option> 
+                  <option value="4020" {% if asset["asset_status"]=='4020' %}selected{% endif %}>4020: สิ้นสุดสัญญาเช่า</option> 
               </td>
               <td>
                 <select name="disposal_status" class="form-select form-select-sm" id="select-{{ asset['id'] }}" disabled
                   onchange="handleStatusChange(this, '{{ asset['id'] }}')">
 
-                  <option value="" {% if asset["disposal_status"]=='' %}selected{% endif %}>เลือก</option>
-                  <option value="1" {% if asset["disposal_status"]=='1' %}selected{% endif %}>รอดำเนินการจำหน่าย
-                  </option>
-                  <option value="2" {% if asset["disposal_status"]=='2' %}selected{% endif %}>จัดทำหนังสือขอความเห็นชอบ
-                  </option>
-                  <option value="3" {% if asset["disposal_status"]=='3' %}selected{% endif %}>
-                    แต่งตั้งคณะกรรมการตรวจสอบข้อเท็จจริง</option>
-                  <option value="4" {% if asset["disposal_status"]=='4' %}selected{% endif %}>รายงานผลการตรวจสอบ
-                  </option>
-                  <option value="5" {% if asset["disposal_status"]=='5' %}selected{% endif %}>ขออนุมัติจำหน่าย</option>
-                  <option value="6" {% if asset["disposal_status"]=='6' %}selected{% endif %}>ดำเนินการจำหน่าย</option>
-                  <option value="7" {% if asset["disposal_status"]=='7' %}selected{% endif %}>จำหน่ายแล้วเสร็จ</option>
-                  <option value="8" {% if asset["disposal_status"]=='8' %}selected{% endif %}>ตัดจำหน่ายในระบบ SAP
-                  </option>
-                  <option value="9" {% if asset["disposal_status"]=='9' %}selected{% endif %}>รายงานผลการจำหน่าย
-                  </option>
+                  <option value="" disabled {% if asset["disposal_status"]=='' %}selected{% endif %}>เลือก</option>
+                  <option value="1" {% if asset["disposal_status"]=='1' %}selected{% endif %}>1: รอดำเนินการจำหน่าย</option>
+                  <option value="2" {% if asset["disposal_status"]=='2' %}selected{% endif %}>2: จัดทำหนังสือขอความเห็นชอบ</option>
+                  <option value="3" {% if asset["disposal_status"]=='3' %}selected{% endif %}>3: แต่งตั้งคณะกรรมการตรวจสอบข้อเท็จจริง</option>
+                  <option value="4" {% if asset["disposal_status"]=='4' %}selected{% endif %}>4: รายงานผลการตรวจสอบ</option>
+                  <option value="5" {% if asset["disposal_status"]=='5' %}selected{% endif %}>5: ขออนุมัติจำหน่าย</option>
+                  <option value="6" {% if asset["disposal_status"]=='6' %}selected{% endif %}>6: ดำเนินการจำหน่าย</option>
+                  <option value="7" {% if asset["disposal_status"]=='7' %}selected{% endif %}>7: จำหน่ายแล้วเสร็จ</option>
+                  <option value="8" {% if asset["disposal_status"]=='8' %}selected{% endif %}>8: ตัดจำหน่ายในระบบ SAP</option>
+                  <option value="9" {% if asset["disposal_status"]=='9' %}selected{% endif %}>9: รายงานผลการจำหน่าย</option>
                 </select>
               </td>
               <td>

@@ -171,9 +171,9 @@
             <option value="A303701000" {{ 'selected' if request.query_params.get('cost_center')=='A303701000' else ''
               }}>แผนกบริหาร</option>
             <option value="A303701010" {{ 'selected' if request.query_params.get('cost_center')=='A303701010' else ''
-              }}>แผนกก่อสร้างปฏิบัติการและบำรุงรักษา(1010)</option>
-            <option value="A303701011" {{ 'selected' if request.query_params.get('cost_center')=='A303701011' else ''
-              }}>แผนกก่อสร้างปฏิบัติการและบำรุงรักษา(1011)</option>
+              }}>แผนกก่อสร้างปฏิบัติการและบำรุงรักษา</option>
+            <!-- <option value="A303701011" {{ 'selected' if request.query_params.get('cost_center')=='A303701011' else ''
+              }}>แผนกก่อสร้างปฏิบัติการและบำรุงรักษา(1011)</option> -->
             <option value="A303701020" {{ 'selected' if request.query_params.get('cost_center')=='A303701020' else ''
               }}>แผนกบริการลูกค้า</option>
             <option value="A303701030" {{ 'selected' if request.query_params.get('cost_center')=='A303701030' else ''
@@ -195,7 +195,7 @@
         <div class="left-column">
           <div class="chart-box">
             <h3></h3>
-            <div style="width: 500px; height: 500px;">
+            <div style="width: 400px; height: 400px;">
               {% include 'assets-status-graph.html' %}
             </div>
           </div>
@@ -226,7 +226,7 @@
         <div class="right-column">
           <div class="chart-box">
             <h3></h3>
-            <div style="width: 450px; height: 450px;">
+            <div style="width: 400px; height: 400px;">
               {% include 'disposal-status-graph.html' %}
             </div>
           </div>
