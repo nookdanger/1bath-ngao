@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8">
+  <title>หนังสือขอทรัพย์สิน</title>
+
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8">
+  <title>Download Files</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+   <link href="https://fonts.googleapis.com/css2?family=Sarabun&display=swap" rel="stylesheet">
+  <style>
+     * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      font-family: "Segoe UI", sans-serif;
+      background-color: #f4f6f8;
+    }
+
+    .container {
+      display: flex;
+      height: 100vh;
+      margin: 0;
+    }
+
+    .sidebar {
+      width: 220px;
+      background-color: #1976d2;
+      color: white;
+      padding: 20px;
+    }
+
+    .sidebar h2 {
+      font-size: 20px;
+      margin-bottom: 20px;
+    }
+
+    .sidebar a {
+      display: block;
+      color: white;
+      padding: 10px;
+      text-decoration: none;
+      border-radius: 6px;
+      transition: background 0.2s;
+    }
+
+    .sidebar a:hover {
+      background-color: rgba(255, 255, 255, 0.1);
+    }
+
+    .content {
+      flex: 1;
+      padding: 30px;
+      overflow-y: auto;
+      border-collapse: collapse;
+      background-color: white;
+      box-shadow: 0 1px 4px rgba(0, 0, 0, 0.1);
+      border-radius: 6px;
+      overflow: hidden;
+    }
+
+    .header {
+      font-size: 24px;
+      margin-bottom: 20px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    select {
+      padding: 5px 10px;
+      font-size: 14px;
+    }
+
+    .main-layout {
+      display: flex;
+      gap: 40px;
+      flex-wrap: wrap;
+    }
+
+    .left-column {
+      flex: 1;
+      min-width: 400px;
+    }
+
+    .right-column {
+      flex: 1;
+      min-width: 400px;
+    }
+
+    .chart-box {
+      margin-bottom: 40px;
+    }
+
+    .chart-box h3 {
+      margin-bottom: 10px;
+      font-size: 18px;
+    }
+
+
+
+    th,
+   
+
+    .indent {
+      text-indent: 2em;
+    }
+      @media print {
+    body * {
+      visibility: hidden;
+    }
+
+    #print-area, #print-area * {
+      visibility: visible;
+    }
+
+    #print-area {
+      position: absolute;
+      left: 0;
+      top: 0;
+      width: 100%;
+    }
+
+    button {
+      display: none;
+    }
+  }
+  </style>
+</head>
+<body>
+<div class="container">
+  <div class="sidebar">
+    <h4>การไฟฟ้างาว</h4>
+    <a href="/main">📊 Dashboard</a>
+    <a href="/report">📄 Report</a>
+    <a href="/sample">📝 แบบฟอร์มตัวอย่าง</a>
+  </div>
+  <div class="content" id="print-area" >
+  
+    <div  style="display: flex; align-items: center;">
+      <img src="/static/pea-logo.png" alt="PEA Logo" width="80" style="margin-right: 16px;">
+      <div>
+        <h3 style="margin: 0;">การไฟฟ้าส่วนภูมิภาค</h3>
+        <p style="margin: 0;">PROVINCIAL ELECTRICITY AUTHORITY</p>
+      </div>
+    </div>
+
+  <table>
+    <tr>
+      <td>จาก</td>
+      <td>{{ cost_center_mapping.get(cost_center, "-") }}</td>
+      <td style="width: 60px;"></td>
+      <td>ถึง</td>
+      <td>{{ to_unit }}</td>
+    </tr>
+    <tr>
+      <td>เลขที่</td>
+      <td>{{ from_unit }}</td>
+      <td></td>
+      <td>วันที่</td>
+      <td>{{ today_date }}</td>
+    </tr>
+    <tr>
+      <td>เรื่อง</td>
+      <td>ขอทราบมูลค่าซื้อหรือได้มาของทรัพย์สิน</td>
+      <td></td>
+      <td>จำนวน</td>
+      <td>{{ assets|length }} รายการ</td>
+    </tr>
+    <tr>
+      <td>เรียน</td>
+      <td>หัวหน้าหน่วยงานบัญชี</td>
+      <td></td>
+      <td colspan="2"></td>
+    </tr>
+  </table>
+
+  <p class="indent">
+    หน่วยงานเจ้าของทรัพย์สิน ขอทราบมูลค่าซื้อหรือได้มาของทรัพย์สิน จำนวน {{ assets|length }} รายการ
+  </p>
+  <p class="indent">
+    เพื่อใช้เป็นเอกสารประกอบการพิจารณาขออนุมัติจำหน่ายทรัพย์สินออกจากบัญชี รายละเอียดดังนี้
+  </p>
+
+  <table>
+    {% for asset in assets %}
+    <tr>
+    <td style="width: 20px;">{{ loop.index }}</td>
+    <td>{{ asset.description }}</td><td style="width: 30px;"></td><td>{{ asset.asset_id }}</td>
+    {% endfor %}
+    </tr>
+  </table>
+
+  <p class="indent">
+    จึงเรียนมาเพื่อโปรดดำเนินการต่อไป
+  </p>
+
+  <br><br><br>
+  <p>..................................................</p>
+  <p>(ลงชื่อ) หัวหน้าหน่วยงาน / ผู้รักษาการแทน / ผู้ปฏิบัติงานแทน</p>
+  </div>
+    <div>
+    <button onclick="window.print()" style="margin-bottom: 20px;">
+    🖨️ พิมพ์เอกสาร
+  </button>
+  </div>
+</body>
+</html>

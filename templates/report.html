@@ -1,46 +1,175 @@
-<!-- templates/report.html -->
 <!DOCTYPE html>
-<html lang="en">
+<html lang="th">
+
 <head>
   <meta charset="UTF-8">
-  <title>Asset Report</title>
+  <title>ARTs Dashboard</title>
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+
+    html,
+    body {
+      margin: 0;
+      padding: 0;
+      height: 100%;
+      width: 100%;
+      font-family: "Segoe UI", sans-serif;
+      background-color: #f4f6f8;
+    }
+
+    body {
+      display: flex;
+      flex-direction: column;
+    }
+
+    .sidebar {
+      width: 220px;
+      background-color: #1976d2;
+      color: white;
+      padding: 20px;
+      overflow-y: auto;
+      position: fixed;
+      top: 0;
+      left: 0;
+      bottom: 0;
+    }
+
+    .content {
+      margin-left: 220px;
+      padding: 30px;
+      flex-grow: 1;
+      width: calc(100vw - 220px);
+      overflow-x: auto;
+      overflow-y: auto;
+      min-height: 100vh;
+      background-color: #ffffff;
+    }
+
+    .sidebar h2 {
+      font-size: 20px;
+      margin-bottom: 20px;
+    }
+
+    .sidebar a {
+      display: block;
+      color: white;
+      padding: 10px;
+      text-decoration: none;
+      border-radius: 6px;
+      transition: background 0.2s;
+    }
+
+    .sidebar a:hover {
+      background-color: rgba(255, 255, 255, 0.1);
+    }
+
+    @media print {
+      body * {
+        visibility: hidden;
+      }
+
+      #print-area,
+      #print-area * {
+        visibility: visible;
+      }
+
+      #print-area {
+        position: absolute;
+        left: 0;
+        top: 0;
+        width: 100%;
+      }
+
+      .d-print-none {
+        display: none !important;
+      }
+    }
+  </style>
+
+  <script>
+    function selecttoggle(source) {
+      document.getElementsByName('select').forEach((i) => i.checked = source.checked)
+    }
+  </script>
 </head>
-<body class="container py-4">
-  <h2 class="mb-4">📋 รายงานสินทรัพย์</h2>
-  <table class="table table-striped table-bordered table-hover">
-    <thead class="table-dark">
-      <tr>
-        <th>สินทรัพย์</th>
-        <th>เลขที่ย่อย</th>
-        <th>เลขที่สินค้าคงคลัง</th>
-        <th>คำอธิบายของสินทรัพย์</th>
-        <th>เลขที่ผลิตภัณฑ์</th>
-        <th>วันที่โอนเป็นทุน</th>
-        <th>มูลค่าการได้มา</th>
-        <th>ค่าเสื่อมสะสม</th>
-        <th>มูลค่าตามบัญชี</th>
-        <th>สถานะ</th>
-        <th>ศูนย์ต้นทุน</th>
-      </tr>
-    </thead>
-    <tbody>
-      {% for row in assets %}
-      <tr>
-        <td>{{ row["asset_id"] }}</td>
-        <td>{{ row["sub_number"] }}</td>
-        <td>{{ row["inventory_code"] }}</td>
-        <td>{{ row["description"] }}</td>
-        <td>{{ row["product_code"] }}</td>
-        <td>{{ row["capitalized_date"] }}</td>
-        <td>{{ "{:,.2f}".format(row["acquisition_value"] or 0) }}</td>
-        <td>{{ "{:,.2f}".format(row["accumulated_depreciation"] or 0) }}</td>
-        <td>{{ "{:,.2f}".format(row["book_value"] or 0) }}</td>
-        <td>{{ row["status"] }}</td>
-        <td>{{ row["cost_center"] }}</td>
-      </tr>
-      {% endfor %}
-    </tbody>
-  </table>
+
+<body>
+  <div class="sidebar">
+    <h2>การไฟฟ้างาว</h2>
+    <a href="/main">📊 Dashboard</a>
+    <a href="/report">📄 Report</a>
+    <a href="/download">📝 แบบฟอร์มตัวอย่าง</a>
+  </div>
+
+  <div class="content" id="print-area">
+    <form method="get" action="/report" class="mb-3 d-print-none">
+      <div class="d-flex gap-3 align-items-center mb-3">
+        <label for="cost_center">หน่วยงาน:</label>
+        <select id="cost_center" name="cost_center" onchange="this.form.submit()" class="form-select w-auto">
+          <option value="">-- ทั้งหมด --</option>
+          <option value="A303701000" {{ 'selected' if request.query_params.get('cost_center')=='A303701000' else '' }}>แผนกบริหาร</option>
+          <option value="A303701010" {{ 'selected' if request.query_params.get('cost_center')=='A303701010' else '' }}>แผนกก่อสร้างปฏิบัติการและบำรุงรักษา(1010)</option>
+          <option value="A303701011" {{ 'selected' if request.query_params.get('cost_center')=='A303701011' else '' }}>แผนกก่อสร้างปฏิบัติการและบำรุงรักษา(1011)</option>
+          <option value="A303701020" {{ 'selected' if request.query_params.get('cost_center')=='A303701020' else '' }}>แผนกบริการลูกค้า</option>
+          <option value="A303701030" {{ 'selected' if request.query_params.get('cost_center')=='A303701030' else '' }}>แผนกสนับสนุน</option>
+          <option value="A303701040" {{ 'selected' if request.query_params.get('cost_center')=='A303701040' else '' }}>แผนกมิเตอร์และหม้อแปลง</option>
+        </select>
+
+        <label class="ms-3" for="asset_status">สถานะ:</label>
+        <select name="asset_status" onchange="this.form.submit()" class="form-select w-auto">
+          <option value="">-- ทั้งหมด --</option>
+          <option value="2010" {{ 'selected' if request.query_params.get('asset_status')=='2010' else '' }}>2010: ติดตั้ง/ใช้งาน</option>
+          <option value="0000" {{ 'selected' if request.query_params.get('asset_status')=='0000' else '' }}>0000: อื่นๆ</option>
+        </select>
+      </div>
+    </form>
+
+    <!-- ปุ่มพิมพ์ + Generate Report -->
+    <form method="post" action="/report-create">
+      <div class="mb-3 d-flex gap-2 d-print-none">
+        <button type="submit" class="btn btn-success">
+          📄 Generate Report
+        </button>
+      </div>
+<input type="hidden" name="cost_center" value="{{cost_center}}">
+      <table class="table table-bordered table-striped align-middle">
+        <thead class="table-dark">
+          <tr>
+            <th><input type="checkbox" onchange="selecttoggle(this)"></th>
+            <th>ลำดับ</th>
+            <th>สินทรัพย์</th>
+            <th>เลขที่ย่อย</th>
+            <th>คำอธิบาย</th>
+            <th>เลขที่ผลิตภัณฑ์</th>
+            <th>วันที่โอน</th>
+            <th>มูลค่า</th>
+            <th>สถานะ</th>
+            <th>ดำเนินการ</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for asset in assets %}
+          <tr>
+            <td><input type="checkbox" name="select" value="{{ asset['id'] }}"></td>
+            <td>{{ loop.index }}</td>
+            <td>{{ asset["asset_id"] }}</td>
+            <td>{{ asset["sub_number"] }}</td>
+            <td>{{ asset["description"] }}</td>
+            <td>{{ asset["product_code"] or '' }}</td>
+            <td>{{ asset["capitalized_date"][:10] if asset["capitalized_date"] else '' }}</td>
+            <td>{{ "{:,.2f}".format(asset["acquisition_value"] or 0) }}</td>
+            <td>{{ assets_status_mapping.get(asset["asset_status"], asset["asset_status"]) }}</td>
+            <td>{{ status_mapping.get(asset["disposal_status"], '-') }}</td>
+                      </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </form>
+  </div>
 </body>
 </html>

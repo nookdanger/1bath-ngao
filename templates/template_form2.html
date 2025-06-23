@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8">
+  <style>
+    body {
+      font-family: 'TH Sarabun New', sans-serif;
+      font-size: 18px;
+      line-height: 1.5;
+    }
+    .header {
+      text-align: center;
+      font-weight: bold;
+      font-size: 22px;
+    }
+    .box {
+      border: 1px solid black;
+      padding: 10px;
+      margin-top: 10px;
+    }
+    .list-item {
+      margin-left: 20px;
+    }
+    .sign {
+      margin-top: 80px;
+      text-align: right;
+    }
+  </style>
+</head>
+<body>
+  <div class="header">ตัวอย่างแบบ 2</div>
+  <div class="box">
+    หนังสือขอทำบันทึกขออนุมัติจำหน่ายทรัพย์สินออกจากบัญชี (ผนย.กผฝ.(น1) สำหรับหน่วยงานสังกัดเขต / ผสน.กฟสฯ) 
+  </div>
+
+  <p><b>จาก:</b> {{ from_department }}<br>
+     <b>ถึง:</b> {{ to_department }}<br>
+     <b>เลขที่:</b> {{ document_no }}&nbsp;&nbsp;&nbsp;&nbsp; <b>วันที่:</b> {{ date }}
+  </p>
+
+  <p><b>เรื่อง:</b> ขอทราบมูลค่าซื้อหรือได้มาของทรัพย์สิน จำนวน {{ asset_list | length }} รายการ</p>
+  <p><b>เรียน:</b> หัวหน้าฝ่ายงานบัญชี</p>
+
+  <p>{{ from_department }} ขอทราบมูลค่าซื้อหรือได้มาของทรัพย์สิน รายละเอียดดังนี้:</p>
+  <ul>
+    {% for item in asset_list %}
+      <li class="list-item">{{ item.name }} | {{ item.code }}</li>
+    {% endfor %}
+  </ul>
+
+  <p>จึงเรียนมาเพื่อโปรดดำเนินการต่อไป</p>
+
+  <div class="sign">
+    (ลงชื่อ) ..................................................<br>
+    หัวหน้าหน่วยงาน / ผู้รักษาการแทน
+  </div>
+</body>
+</html>

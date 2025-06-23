@@ -7,11 +7,17 @@ import os
 import base64
 from datetime import datetime
 from fastapi.responses import JSONResponse
+from typing import Optional
+from fastapi.staticfiles import StaticFiles
+from datetime import datetime
+from jinja2 import Environment, FileSystemLoader
+
+
 
 app = FastAPI()
 templates = Jinja2Templates(directory="templates")
 DB_PATH = os.path.join(os.path.dirname(__file__), "assets.db")
-
+app.mount("/static", StaticFiles(directory="static"), name="static")
 status_mapping = {
     "1": "1.รอดำเนินการจำหน่าย",
     "2": "2.จัดทำหนังสือขอความเห็นชอบ",
@@ -39,7 +45,13 @@ assets_status_mapping = {
     "4010": "จำหน่ายเป็นสูญ",
     "4020": "สิ้นสุดสัญญาเช่า",
     }
-
+cost_center_mapping = {
+    "A303701000": "แผนกบริหาร",
+    "A303701010": "แผนกก่อสร้างปฏิบัติการและบำรุงรักษา",
+    "A303701020": "แผนกบริการลูกค้า",
+    "A303701030": "แผนกสนับสนุน",
+    "A303701040": "แผนกมิเตอร์และหม้อแปลง",
+}
 def get_assets():
     conn = sqlite3.connect(DB_PATH)
     conn.row_factory = sqlite3.Row
@@ -62,13 +74,17 @@ def dashboard(request: Request, disposal_status: str = "" ,cost_center: str = ""
     conn = sqlite3.connect(DB_PATH)
     conn.row_factory = sqlite3.Row
     cursor = conn.cursor()
-    print("cost_center: ",cost_center ," disposal_status: ",disposal_status)
-    if checkEmptyNone(disposal_status) and checkEmptyNone(cost_center):
+    print("cost_center: ",cost_center ," disposal_status: ",disposal_status, "asset_status :",asset_status)
+
+    if checkEmptyNone(disposal_status) and  checkEmptyNone(cost_center) and checkEmptyNone(asset_status):
+        cursor.execute("SELECT * FROM assets WHERE disposal_status = ? and asset_status=? and cost_center=? ORDER BY book_value,id ", (disposal_status,asset_status,cost_center))
+    elif checkEmptyNone(disposal_status) and checkEmptyNone(cost_center):
         cursor.execute("SELECT * FROM assets WHERE disposal_status = ? and cost_center= ? ORDER BY book_value,id ", (disposal_status,cost_center,))
     elif checkEmptyNone(disposal_status) and  not checkEmptyNone(cost_center):
         cursor.execute("SELECT * FROM assets WHERE disposal_status = ? ORDER BY book_value,id ", (disposal_status,))
   
-     
+    
+
     elif checkEmptyNone(asset_status) and checkEmptyNone(cost_center):
         cursor.execute("SELECT * FROM assets WHERE asset_status = ? and cost_center= ? ORDER BY book_value,id ", (asset_status,cost_center,))
     elif checkEmptyNone(asset_status) and  not checkEmptyNone(cost_center):
@@ -249,7 +265,7 @@ def dashboard(request: Request, disposal_status: str = None):
 @app.post("/update-status", response_class=RedirectResponse)
 async def update_status(
     id: str = Form(...),
-    disposal_status: str = Form(...),
+    disposal_status: Optional[str] = Form(None),
     asset_status: str = Form(...),
     image_file: UploadFile = None,
     cost_center: str = Form(...),
@@ -262,6 +278,8 @@ async def update_status(
 
     conn = sqlite3.connect(DB_PATH)
     cursor = conn.cursor()
+
+    print("xxxxx :",disposal_status)
     cursor.execute("""
         UPDATE assets 
         SET disposal_status = ?, 
@@ -269,6 +287,8 @@ async def update_status(
             image = COALESCE(?, image)
         WHERE id = ?
     """, (disposal_status,asset_status, image_base64, id))
+
+
     conn.commit()
     conn.close()
     return RedirectResponse(url=f"/asset?disposal_status={disposal_status_selected}&cost_center={cost_center}&asset_status={asset_status}", status_code=303)
@@ -377,6 +397,96 @@ def delete_asset(request: Request,asset_log_id: int ,disposal_status: str="",cos
     # redirect กลับไปหน้าแสดง asset รายตัว
     return RedirectResponse(url=f"/asset/{asset_id}?disposal_status={disposal_status}&cost_center={cost_center}&asset_status={asset_status}", status_code=303)
 
+
+
+
+@app.get("/download")
+async def download_files(request: Request):
+    files = [
+        {"name": "0 หนังสือขอทราบมูลค่าทรัพย์สิน.pdf", "url": "/static/0 หนังสือขอทราบมูลค่าทรัพย์สิน.pdf"},
+        {"name": "0.1 หนังสือแจ้งทรัพย์สินสภาพดีให้หน่วยงานอื่นใช้ต่อ.pdf", "url": "/static/0.1 หนังสือแจ้งทรัพย์สินสภาพดีให้หน่วยงานอื่นใช้ต่อ.pdf"},
+        {"name": "1 หนังสือข้อความเห็นจากหน่วยงานที่เกี่ยวข้อง.pdf", "url": "/static/1 หนังสือข้อความเห็นจากหน่วยงานที่เกี่ยวข้อง.pdf"},
+        {"name": "2 ขออนุมัติแต่งตั้งคณะกรรมการตรวจสอบข้อเท็จจริง.pdf", "url": "/static/2 ขออนุมัติแต่งตั้งคณะกรรมการตรวจสอบข้อเท็จจริง.pdf"},
+        {"name": "2.2 ขออนุมัติแต่งตั้งคณะกรรมการตรวจสอบข้อเท็จจริง(ยานพาหนะ).pdf", "url": "/static/2.2 ขออนุมัติแต่งตั้งคณะกรรมการตรวจสอบข้อเท็จจริง(ยานพาหนะ).pdf"},
+        {"name": "3 รายงานผลการตรวจสอบข้อเท็จจริง.pdf", "url": "/static/3 รายงานผลการตรวจสอบข้อเท็จจริง.pdf"},
+        {"name": "3.1 รายงานผลการตรวจสอบข้อเท็จจริง (ทำลาย).pdf", "url": "/static/3.1 รายงานผลการตรวจสอบข้อเท็จจริง (ทำลาย).pdf"},
+        {"name": "3.2 รายงานผลการตรวจสอบข้อเท็จจริง(ยานพาหนะ).pdf", "url": "/static/3.2 รายงานผลการตรวจสอบข้อเท็จจริง(ยานพาหนะ).pdf"},
+        {"name": "4 ขออนุมัติใรหลักการจำหน่ายทรัพย์สิน.pdf", "url": "/static/4 ขออนุมัติใรหลักการจำหน่ายทรัพย์สิน.pdf"},
+        {"name": "4.1 ขออนุมัติใรหลักการจำหน่ายทรัพย์สิน(ทำลาย).pdf", "url": "/static/4.1 ขออนุมัติใรหลักการจำหน่ายทรัพย์สิน(ทำลาย).pdf"},
+        {"name": "4.2 ขออนุมัติใรหลักการจำหน่ายทรัพย์สิน(ยานพาหนะ).pdf", "url": "/static/4.2 ขออนุมัติใรหลักการจำหน่ายทรัพย์สิน(ยานพาหนะ).pdf"},
+    ]
+    return templates.TemplateResponse("downloads.html", {"request": request, "files": files})
+
+
+
+
+
+
+
+@app.get("/report", response_class=HTMLResponse)
+def dashboard(request: Request ,cost_center: str = "", asset_status:str =""):
+    conn = sqlite3.connect(DB_PATH)
+    conn.row_factory = sqlite3.Row
+    cursor = conn.cursor()
+    print("cost_center: ",cost_center ,"asset_status :",asset_status)
+    if checkEmptyNone(cost_center) and  checkEmptyNone(asset_status) and asset_status == "2010":
+        print(1)
+        cursor.execute("SELECT * FROM assets where cost_center =? and asset_status =? ORDER BY book_value,id ", (cost_center,asset_status))
+    elif checkEmptyNone(cost_center) and  checkEmptyNone(asset_status) and asset_status == "0000":
+        print(11)
+        cursor.execute("SELECT * FROM assets where cost_center =? and asset_status !=? ORDER BY book_value,id ", (cost_center,"2010"))
+    elif checkEmptyNone(cost_center) and  not checkEmptyNone(asset_status):
+        print(111)
+        cursor.execute("SELECT * FROM assets where cost_center =?  ORDER BY book_value,id ", (cost_center,))
+    elif not checkEmptyNone(cost_center) and   checkEmptyNone(asset_status) and asset_status == "2010":
+        print(1111)
+        cursor.execute("SELECT * FROM assets where asset_status =?  ORDER BY book_value,id ", (asset_status,))
+    elif not checkEmptyNone(cost_center) and   checkEmptyNone(asset_status) and asset_status == "0000":
+        print(11112)
+        cursor.execute("SELECT * FROM assets where asset_status !=?  ORDER BY book_value,id ", ("2010",))
+    elif not checkEmptyNone(cost_center) and  not checkEmptyNone(asset_status):
+        print(11111)
+        cursor.execute("SELECT * FROM assets ORDER BY book_value,id ")
+
+    rows = cursor.fetchall()
+    conn.close()
+    return templates.TemplateResponse("report.html", {
+        "cost_center":cost_center,
+        "request": request,
+        "assets": rows,
+        "status_mapping": status_mapping,
+        "assets_status_mapping": assets_status_mapping,
+    })
+
+
+from typing import List
+
+@app.post("/report-create")
+async def report_create(
+    request: Request,
+    select: List[str] = Form(...),
+    cost_center: str = Form("")
+):
+    print("Selected asset IDs:", select)
+
+    conn = sqlite3.connect(DB_PATH)
+    conn.row_factory = sqlite3.Row
+    cursor = conn.cursor()
+
+    # prepare SQL
+    placeholders = ','.join(['?'] * len(select))  # '?, ?, ?, ?'
+    query = f"SELECT * FROM assets WHERE id IN ({placeholders}) ORDER BY book_value, id"
+    cursor.execute(query, select)
+    rows = cursor.fetchall()
+    conn.close()
+
+    return templates.TemplateResponse("report-result.html", {
+        "cost_center": cost_center,
+        "request": request,
+        "assets": rows,
+        "today_date": datetime.today().strftime('%d/%m/%Y') , # 🗓️ ส่งวันที่วันนี้
+        "cost_center_mapping": cost_center_mapping
+    })
 
 
 
