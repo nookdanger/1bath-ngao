@@ -101,9 +101,12 @@
 <body>
   <div class="sidebar">
     <h2>การไฟฟ้างาว</h2>
-    <a href="/main">📊 Dashboard</a>
-    <a href="/report">📄 Report</a>
-    <a href="/download">📝 แบบฟอร์มตัวอย่าง</a>
+        <a href="/main">📊 Dashboard</a>
+        <a href="/process">♻️ ผังขั้นตอนการจำหน่าย</a>
+        <a href="/download">📝 ดาวโหลดแบบฟอร์ม</a>
+        <a href="/report">📄 Report</a>
+        <a href="/other">📄 เอกสารอื่นๆ</a>
+
   </div>
 
   <div class="content" id="print-area">
@@ -113,8 +116,8 @@
         <select id="cost_center" name="cost_center" onchange="this.form.submit()" class="form-select w-auto">
           <option value="">-- ทั้งหมด --</option>
           <option value="A303701000" {{ 'selected' if request.query_params.get('cost_center')=='A303701000' else '' }}>แผนกบริหาร</option>
-          <option value="A303701010" {{ 'selected' if request.query_params.get('cost_center')=='A303701010' else '' }}>แผนกก่อสร้างปฏิบัติการและบำรุงรักษา(1010)</option>
-          <option value="A303701011" {{ 'selected' if request.query_params.get('cost_center')=='A303701011' else '' }}>แผนกก่อสร้างปฏิบัติการและบำรุงรักษา(1011)</option>
+          <option value="A303701010" {{ 'selected' if request.query_params.get('cost_center')=='A303701010' else '' }}>แผนกก่อสร้างปฏิบัติการและบำรุงรักษา</option>
+          
           <option value="A303701020" {{ 'selected' if request.query_params.get('cost_center')=='A303701020' else '' }}>แผนกบริการลูกค้า</option>
           <option value="A303701030" {{ 'selected' if request.query_params.get('cost_center')=='A303701030' else '' }}>แผนกสนับสนุน</option>
           <option value="A303701040" {{ 'selected' if request.query_params.get('cost_center')=='A303701040' else '' }}>แผนกมิเตอร์และหม้อแปลง</option>

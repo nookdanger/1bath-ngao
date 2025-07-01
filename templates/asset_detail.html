@@ -146,9 +146,13 @@
     <div class="sidebar">
       <h2>การไฟฟ้างาว</h2>
         <a href="/main">📊 Dashboard</a>
+        <a href="/process">♻️ ผังขั้นตอนการจำหน่าย</a>
+        <a href="/download">📝 ดาวโหลดแบบฟอร์ม</a>
         <a href="/report">📄 Report</a>
-        <a href="/download">📝 แบบฟอร์มตัวอย่าง</a>
-        href="/asset?disposal_status={{ disposal_status }}&cost_center={{ cost_center }}&asset_status={{ asset_status }}">⬅️
+        <a href="/other">📄 เอกสารอื่นๆ</a>
+
+
+      <a href="/asset?disposal_status={{ disposal_status }}&cost_center={{ cost_center }}&asset_status={{ asset_status }}">⬅️
         กลับ</a>
     </div>
     <div class="content">
@@ -170,27 +174,36 @@
             <th>📅 วันที่</th>
             <th>📌 สถานะ</th>
             <th>📄 รายละเอียด / เอกสารอ้างอิง</th>
-            <th>❌ ลบ</th>
+            <th>❌ แก้ไข</th>
           </tr>
         </thead>
-        <tbody>
+       <tbody>
+  {% for log in logs %}
+  <form method="POST" action="/assets/{{ log['asset_id']}}/{{ log['id'] }}/edit-ref?cost_center={{ cost_center }}&disposal_status={{ disposal_status }}&asset_status={{ asset_status }}">
+    <tr>
+      <td>{{ log["changed_at"] }}</td>
+      <td><span class="badge bg-primary">{{ log["status_description"] }}</span></td>
+      <td>
+        <input type="text" id="ref_{{ log['id'] }}" name="ref_document" value="{{ log['ref_document'] }}" class="form-control" required disabled>
+      </td>
+     <td>
+  <button type="button" class="btn btn-success" onclick="document.getElementById('ref_{{ log['id'] }}').disabled = false;">
+    ✍️ แก้ไข
+  </button>
+  <button type="submit" class="btn btn-primary">
+    💾 บันทึก
+  </button>
+</td>
+    </tr>
+  </form>
+  {% else %}
+  <tr>
+    <td colspan="4" class="text-center text-muted">ไม่มีประวัติการเปลี่ยนสถานะ</td>
+  </tr>
+  {% endfor %}
+</tbody>
 
-          {% for log in logs %}
-          <form method="POST" action="/assets/{{ log['id'] }}/delete?cost_center={{ cost_center }}&disposal_status={{ disposal_status }}&asset_status={{ asset_status }}"
-            onsubmit="return confirm('คุณแน่ใจหรือไม่ว่าต้องการลบสินทรัพย์นี้?');">
-            <tr>
-              <td>{{ log["changed_at"] }}</td>
-              <td><span class="badge bg-primary">{{ log["status_description"] }}</span></td>
-              <td>{{ log["ref_document"] }}</td>
-              <td><button type="submit" class="btn btn-danger mt-2">🗑️ ลบรายการนี้</button></td>
-            </tr>
-          </form>
-          {% else %}
-          <tr>
-            <td colspan="3" class="text-center text-muted">ไม่มีประวัติการเปลี่ยนสถานะ</td>
-          </tr>
-          {% endfor %}
-        </tbody>
+
       </table>
     </div>
 
@@ -203,7 +216,6 @@
 
 
 
-<a href="/assets?disposal_status={{ request.query_params.get('disposal_status') }}&cost_center={{request.query_params.get('cost_center')}}&asset_status={{request.query_params.get('asset_status')}}'"
-  class="btn btn-outline-secondary mt-4">⬅️ กลับหน้าหลัก</a>
+<a href="/assets?disposal_status={{ request.query_params.get('disposal_status') }}&cost_center={{request.query_params.get('cost_center')}}&asset_status={{request.query_params.get('asset_status')}}'" class="btn btn-outline-secondary mt-4">⬅️ กลับหน้าหลัก</a>
 
 </html>

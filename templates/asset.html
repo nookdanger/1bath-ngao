@@ -209,8 +209,11 @@ function previewImage(input, previewId) {
     <div class="sidebar">
       <h2>การไฟฟ้างาว</h2>
         <a href="/main">📊 Dashboard</a>
+        <a href="/process">♻️ ผังขั้นตอนการจำหน่าย</a>
+        <a href="/download">📝 ดาวโหลดแบบฟอร์ม</a>
         <a href="/report">📄 Report</a>
-        <a href="/download">📝 แบบฟอร์มตัวอย่าง</a>
+        <a href="/other">📄 เอกสารอื่นๆ</a>
+
       <a
         href="/main?disposal_status={{ request.query_params.get('disposal_status') }}&cost_center={{request.query_params.get('cost_center')}}&asset_status={{request.query_params.get('asset_status')}}">⬅️
         กลับ</a>
@@ -224,9 +227,7 @@ function previewImage(input, previewId) {
             <option value="A303701000" {{ 'selected' if request.query_params.get('cost_center')=='A303701000' else ''
               }}>แผนกบริหาร</option>
             <option value="A303701010" {{ 'selected' if request.query_params.get('cost_center')=='A303701010' else ''
-              }}>แผนกก่อสร้างปฏิบัติการและบำรุงรักษา(1010)</option>
-            <option value="A303701011" {{ 'selected' if request.query_params.get('cost_center')=='A303701011' else ''
-              }}>แผนกก่อสร้างปฏิบัติการและบำรุงรักษา(1011)</option>
+              }}>แผนกก่อสร้างปฏิบัติการและบำรุงรักษา</option>
             <option value="A303701020" {{ 'selected' if request.query_params.get('cost_center')=='A303701020' else ''
               }}>แผนกบริการลูกค้า</option>
             <option value="A303701030" {{ 'selected' if request.query_params.get('cost_center')=='A303701030' else ''
@@ -240,25 +241,25 @@ function previewImage(input, previewId) {
         <div class="input-group">
           <label class="input-group-text">สถานะการดำเนินการ:</label>
           <select class="form-select" name="disposal_status" onchange="this.form.submit()">
-            <option value="">-- ทั้งหมด --</option>
+            <option value="">---ทั้งหมด---</option>
             <option value="1" {{ 'selected' if request.query_params.get('disposal_status')=='1' else '' }}>
-              รอดำเนินการจำหน่าย</option>
+              1.รอดำเนินการจำหน่าย</option>
             <option value="2" {{ 'selected' if request.query_params.get('disposal_status')=='2' else '' }}>
-              จัดทำหนังสือขอความเห็นชอบ</option>
+              2.จัดทำหนังสือขอความเห็นชอบ</option>
             <option value="3" {{ 'selected' if request.query_params.get('disposal_status')=='3' else '' }}>
-              แต่งตั้งคณะกรรมการตรวจสอบข้อเท็จจริง</option>
+              3.แต่งตั้งคณะกรรมการตรวจสอบข้อเท็จจริง</option>
             <option value="4" {{ 'selected' if request.query_params.get('disposal_status')=='4' else '' }}>
-              รายงานผลการตรวจสอบ</option>
+              4.รายงานผลการตรวจสอบ</option>
             <option value="5" {{ 'selected' if request.query_params.get('disposal_status')=='5' else '' }}>
-              ขออนุมัติจำหน่าย</option>
+              5.ขออนุมัติจำหน่าย</option>
             <option value="6" {{ 'selected' if request.query_params.get('disposal_status')=='6' else '' }}>
-              ดำเนินการจำหน่าย</option>
+              6.ดำเนินการจำหน่าย/ส่งมอบ</option>
             <option value="7" {{ 'selected' if request.query_params.get('disposal_status')=='7' else '' }}>
-              จำหน่ายแล้วเสร็จ</option>
+              7.ส่งมอบของ/จำหน่ายแล้วเสร็จ</option>
             <option value="8" {{ 'selected' if request.query_params.get('disposal_status')=='8' else '' }}>
-              ตัดจำหน่ายในระบบ</option>
+              8.ตัดจำหน่ายในระบบ/โอน</option>
             <option value="9" {{ 'selected' if request.query_params.get('disposal_status')=='9' else '' }}>
-              รายงานผลการจำหน่าย</option>
+              9.รายงานผลการจำหน่าย</option>
           </select>
         </div>
         <div class="input-group">
@@ -347,17 +348,15 @@ function previewImage(input, previewId) {
               <td>
                 <select name="disposal_status" class="form-select form-select-sm" id="select-{{ asset['id'] }}" disabled
                   onchange="handleStatusChange(this, '{{ asset['id'] }}')">
-
-                  <option value="" disabled {% if asset["disposal_status"]== None %}selected{% endif %}>เลือก</option>
-                  <option value="1" {% if asset["disposal_status"]=='1' %}selected{% endif %}>1: รอดำเนินการจำหน่าย</option>
+                  <option value="1" {% if asset["disposal_status"]=='1' %}selected{% endif %}>1: รอดำเนินการจำหน่าย/โอน</option>
                   <option value="2" {% if asset["disposal_status"]=='2' %}selected{% endif %}>2: จัดทำหนังสือขอความเห็นชอบ</option>
                   <option value="3" {% if asset["disposal_status"]=='3' %}selected{% endif %}>3: แต่งตั้งคณะกรรมการตรวจสอบข้อเท็จจริง</option>
                   <option value="4" {% if asset["disposal_status"]=='4' %}selected{% endif %}>4: รายงานผลการตรวจสอบ</option>
                   <option value="5" {% if asset["disposal_status"]=='5' %}selected{% endif %}>5: ขออนุมัติจำหน่าย</option>
-                  <option value="6" {% if asset["disposal_status"]=='6' %}selected{% endif %}>6: ดำเนินการจำหน่าย</option>
-                  <option value="7" {% if asset["disposal_status"]=='7' %}selected{% endif %}>7: จำหน่ายแล้วเสร็จ</option>
-                  <option value="8" {% if asset["disposal_status"]=='8' %}selected{% endif %}>8: ตัดจำหน่ายในระบบ SAP</option>
-                  <option value="9" {% if asset["disposal_status"]=='9' %}selected{% endif %}>9: รายงานผลการจำหน่าย</option>
+                  <option value="6" {% if asset["disposal_status"]=='6' %}selected{% endif %}>6: ดำเนินการจำหน่าย/รอส่งมอบ</option>
+                  <option value="7" {% if asset["disposal_status"]=='7' %}selected{% endif %}>7: ส่งมอบของ/จำหน่ายแล้วเสร็จ</option>
+                  <option value="8" {% if asset["disposal_status"]=='8' %}selected{% endif %}>8: ตัดจำหน่าย/โอน ในระบบ SAP</option>
+                  <option value="9" {% if asset["disposal_status"]=='9' %}selected{% endif %}>9: รายงานผลการจำหน่าย/โอน</option>
                 </select>
               </td>
               <td>

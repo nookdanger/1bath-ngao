@@ -159,10 +159,11 @@
   <div class="container">
     <div class="sidebar">
       <h2>การไฟฟ้างาว</h2>
-      
         <a href="/main">📊 Dashboard</a>
+        <a href="/process">♻️ ผังขั้นตอนการจำหน่าย</a>
+        <a href="/download">📝 ดาวโหลดแบบฟอร์ม</a>
         <a href="/report">📄 Report</a>
-        <a href="/download">📝 แบบฟอร์มตัวอย่าง</a>
+        <a href="/other">📄 เอกสารอื่นๆ</a>
     </div>
 
     <div class="content">
@@ -214,9 +215,11 @@
               </thead>
               <tbody>
                 {% for status in asset_status %}
-                  <tr onclick="goToAssetPageฺิByAssetStatus('{{ status['asset_status_val'] }}')">
-                  <td>{{ assets_status_mapping[status["asset_status_val"] | string] | default("ไม่ระบุ") }}</td>
-                  <td>{{ '{:,.2f}'.format(status["total_book_value"]) }}</td>
+
+                  <tr onclick="goToAssetPageฺิByAssetStatus('{{ status['asset_status'] }}')">
+                  <td>{{ status["status_name"] }}</td>
+                  
+                  <td>{{ '{:,.2f}'.format(status["total_book_value"] or 0) }}</td>
                   <td>{{ status["asset_count"] }}</td>
                 </tr>
                 {% endfor %}
@@ -247,8 +250,8 @@
               <tbody>
                 {% for disposal in disposal %}
                 <tr onclick="goToAssetPage('{{ disposal['disposal_status'] }}')">
-                  <td>{{ status_mapping[disposal["disposal_status"] | string] | default("ไม่ระบุ") }}</td>
-                  <td>{{ '{:,.2f}'.format(disposal["total_book_value"]) }}</td>
+                  <td>{{ status_mapping[disposal["disposal_status"] | string] }}</td>
+                <td>{{ '{:,.2f}'.format(disposal["total_book_value"] or 0) }}</td>
                   <td>{{ disposal["asset_count"] }}</td>
                 </tr>
                 {% endfor %}

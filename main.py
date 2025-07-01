@@ -19,31 +19,31 @@ templates = Jinja2Templates(directory="templates")
 DB_PATH = os.path.join(os.path.dirname(__file__), "assets.db")
 app.mount("/static", StaticFiles(directory="static"), name="static")
 status_mapping = {
-    "1": "1.รอดำเนินการจำหน่าย",
+    "1": "1.รอดำเนินการจำหน่าย/โอน",
     "2": "2.จัดทำหนังสือขอความเห็นชอบ",
     "3": "3.แต่งตั้งคณะกรรมการตรวจสอบข้อเท็จจริง",
     "4": "4.รายงานผลการตรวจสอบ",
     "5": "5.ขออนุมัติจำหน่าย",
-    "6": "6.ดำเนินการจำหน่าย",
-    "7": "7.จำหน่ายแล้วเสร็จ",
-    "8": "8.ตัดจำหน่ายในระบบ SAP",
-    "9": "9.รายงานผลการจำหน่าย",
+    "6": "6.ดำเนินการจำหน่าย/รอส่งมอบ",
+    "7": "7.ส่งมอบ/จำหน่ายแล้วเสร็จ",
+    "8": "8.ตัดจำหน่าย/โอน ในระบบ SAP",
+    "9": "9.รายงานผลการจำหน่าย/โอน",
 }
 
 assets_status_mapping = {
-    "2010": "ติดตั้ง/ใช้งาน",
-    "2020": "ชำรุด",
-    "2030": "สภาพดีแต่ไม่ได้ใช้งาน",
-    "2040": "อยู่ระหว่างขออนุมัติจำหน่าย",
-    "2050": "สูญหาย",
-    "2060": "ให้เช่า",
-    "3010": "จำหน่าย(ขาย)",
-    "3020": "จำหน่าย(แลกเปลี่ยน)",
-    "3030": "จำหน่าย(โอน)",
-    "3040": "จำหน่าย(แปรสภาพ)",
-    "3050": "จำหน่าย(ทำลาย)",
-    "4010": "จำหน่ายเป็นสูญ",
-    "4020": "สิ้นสุดสัญญาเช่า",
+    "2010": "2010: ติดตั้ง/ใช้งาน",
+    "2020": "2020: ชำรุด",
+    "2030": "2030: สภาพดีแต่ไม่ได้ใช้งาน",
+    "2040": "2040: อยู่ระหว่างขออนุมัติจำหน่าย",
+    "2050": "2050: สูญหาย",
+    "2060": "2060: ให้เช่า",
+    "3010": "3010: จำหน่าย(ขาย)",
+    "3020": "3020: จำหน่าย(แลกเปลี่ยน)",
+    "3030": "3030: จำหน่าย(โอน)",
+    "3040": "3040: จำหน่าย(แปรสภาพ)",
+    "3050": "3050: จำหน่าย(ทำลาย)",
+    "4010": "4010: จำหน่ายเป็นสูญ",
+    "4020": "4020: สิ้นสุดสัญญาเช่า",
     }
 cost_center_mapping = {
     "A303701000": "แผนกบริหาร",
@@ -70,7 +70,7 @@ def checkEmptyNone(value: str):
     return value and value != "None" and value != ""
 
 @app.get("/asset", response_class=HTMLResponse)
-def dashboard(request: Request, disposal_status: str = "" ,cost_center: str = "", asset_status:str =""):
+def dashboard(request: Request, disposal_status: str = "" ,cost_center: str = None, asset_status:str =""):
     conn = sqlite3.connect(DB_PATH)
     conn.row_factory = sqlite3.Row
     cursor = conn.cursor()
@@ -107,6 +107,9 @@ def dashboard(request: Request, disposal_status: str = "" ,cost_center: str = ""
 def dashboard(request: Request, cost_center: str = None ):
     conn = sqlite3.connect("assets.db")
     conn.row_factory = sqlite3.Row
+
+
+    
     cursor = conn.cursor()
     base_sql = """
         SELECT
@@ -130,9 +133,14 @@ def dashboard(request: Request, cost_center: str = None ):
     disposal_labels = []
     disposal_values = []
     for disposal_status, count,percentage in rows:
-        label = status_mapping.get(disposal_status, f"ไม่ระบุ ({disposal_status})")
-        disposal_labels.append(label)
-        disposal_values.append(percentage)
+        label = status_mapping.get(disposal_status, None)
+        if label:
+            disposal_labels.append(label)
+            disposal_values.append(percentage)
+
+
+
+
     cursor = conn.cursor()
     base_sql = """
        SELECT
@@ -155,75 +163,121 @@ def dashboard(request: Request, cost_center: str = None ):
     assets_labels = []
     assets_values = []
     for status, count,percentage in rows:
-        label = assets_status_mapping.get(status, f"ไม่ระบุ ({status})")
-        assets_labels.append(label)
-        assets_values.append(percentage)
-
-
-
-
+        label = assets_status_mapping.get(status,None)
+        if label:
+            assets_labels.append(label)
+            assets_values.append(percentage)
+    
+    
     cursor = conn.cursor()
-    base_sql = """
-        SELECT 
-        disposal_status,
-        COUNT(*) AS asset_count,
-        SUM(book_value) AS total_book_value
-        FROM assets
-         {where_clause}
-        GROUP BY disposal_status;
-        """
-    sql = base_sql.format(where_clause=where_clause)
+    where_clause1 = ""
     params3 = ()
     if cost_center:
-        where_clause = "WHERE cost_center = ?"
+        where_clause1 = "AND assets.cost_center = ?"
         params3 = (cost_center,)
+
+    base_sql = """
+        WITH status_map(disposal_status, status_name) AS (
+            VALUES
+                ('1', '1.รอดำเนินการจำหน่าย/โอน'),
+                ('2', '2.จัดทำหนังสือขอความเห็นชอบ'),
+                ('3', '3.แต่งตั้งคณะกรรมการตรวจสอบข้อเท็จจริง'),
+                ('4', '4.รายงานผลการตรวจสอบ'),
+                ('5', '5.ขออนุมัติจำหน่าย'),
+                ('6', '6.ดำเนินการจำหน่าย/รอส่งมอบ'),
+                ('7', '7.ส่งมอบ/จำหน่ายแล้วเสร็จ'),
+                ('8', '8.ตัดจำหน่าย/โอน ในระบบ SAP'),
+                ('9', '9.รายงานผลการจำหน่าย/โอน')
+        )
+        SELECT 
+            status_map.disposal_status,
+            status_map.status_name,
+            COUNT(assets.id) AS asset_count,
+            SUM(assets.book_value) AS total_book_value
+        FROM status_map
+        LEFT JOIN assets ON status_map.disposal_status = assets.disposal_status
+        {where_clause1}
+        GROUP BY status_map.disposal_status, status_map.status_name
+        ORDER BY status_map.status_name
+    """
+
+    sql = base_sql.format(where_clause1=where_clause1)
     cursor.execute(sql, params3)
     disposal = cursor.fetchall()
+    
 
 
 
 
     cursor = conn.cursor()
-    base_sql = """
-        SELECT 
-        COALESCE(asset_status, 'ไม่ระบุ') AS asset_status_val,
-        COUNT(*) AS asset_count,
-        SUM(book_value) AS total_book_value
-        FROM assets
-         {where_clause}
-        GROUP BY asset_status;
-        """
-    sql = base_sql.format(where_clause=where_clause)
-    params4 = ()
+    where_clause =""
+    params2 = ()
     if cost_center:
-        where_clause = "WHERE cost_center = ?"
-        params4 = (cost_center,)
-    cursor.execute(sql, params4)
+        where_clause  = "AND assets.cost_center = ?"
+        params2 = (cost_center,)
+
+
+    base_sql = """
+        WITH status_map(asset_status, status_name) AS (
+            VALUES
+                ('2010','2010: ติดตั้ง/ใช้งาน'),
+                ('2020','2020: ชำรุด'),
+                ('2030','2030: สภาพดีแต่ไม่ได้ใช้งาน'),
+                ('2040','2040: อยู่ระหว่างขออนุมัติจำหน่าย'),
+                ('2050','2050: สูญหาย'),
+                ('2060','2060: ให้เช่า'),
+                ('3010','3010: จำหน่าย(ขาย)'),
+                ('3020','3020: จำหน่าย(แลกเปลี่ยน)'),
+                ('3030','3030: จำหน่าย(โอน)'),
+                ('3040','3040: จำหน่าย(แปรสภาพ)'),
+                ('3050','3050: จำหน่าย(ทำลาย)'),
+                ('4010','4010: จำหน่ายเป็นสูญ'),
+                ('4020','4020: สิ้นสุดสัญญาเช่า')
+            )
+        SELECT 
+            status_map.asset_status,
+            status_map.status_name,
+            COUNT(assets.id) AS asset_count,
+            SUM(assets.book_value) AS total_book_value
+        FROM status_map
+        LEFT JOIN assets ON status_map.asset_status = assets.asset_status
+        {where_clause}
+        GROUP BY status_map.asset_status, status_map.status_name
+        ORDER BY status_map.status_name
+    """
+
+    sql = base_sql.format(where_clause=where_clause)
+    cursor.execute(sql, params2)
     asset_status = cursor.fetchall()
-    asset_status_desc = []
-    for asset_status_val in asset_status:
-        status_desc = assets_status_mapping.get(asset_status_val, f"ไม่ระบุ ({asset_status_val})")
-        asset_status_desc.append(status_desc)
+
+
+    # asset_status_desc = []
+    # for asset_status_val in asset_status:
+    #     status_desc = assets_status_mapping.get(asset_status_val, f"ไม่ระบุ ({asset_status_val})")
+    #     asset_status_desc.append(status_desc)
 
 
 
 
 
-
+    where_clause5 =""
+    params5 =()
+    if cost_center:
+        where_clause5 = "WHERE cost_center = ?"
+        params5 = (cost_center,)
     cursor = conn.cursor()
     base_sql = """
         SELECT
-            ROUND(SUM(CASE WHEN asset_status = '2010' AND (disposal_status IS NULL OR disposal_status = '') THEN 1 ELSE 0 END) * 100.0 / COUNT(*), 2) AS percent_in_use,
-            ROUND(SUM(CASE WHEN asset_status != '2010' AND disposal_status IN ('1','2','3','4','5','6','7','8') THEN 1 ELSE 0 END) * 100.0 / COUNT(*), 2) AS percent_waiting_disposal,
+            ROUND(SUM(CASE WHEN asset_status = '2010' AND (disposal_status IS NULL OR disposal_status = '0') THEN 1 ELSE 0 END) * 100.0 / COUNT(*), 2) AS percent_in_use,
+            ROUND(SUM(CASE WHEN asset_status != '2010' AND disposal_status IN ('0','1','2','3','4','5','6','7','8','10') THEN 1 ELSE 0 END) * 100.0 / COUNT(*), 2) AS percent_waiting_disposal,
             ROUND(SUM(CASE WHEN asset_status != '2010' AND disposal_status = '9' THEN 1 ELSE 0 END) * 100.0 / COUNT(*), 2) AS percent_disposed
         FROM assets
-        {where_clause}
+        {where_clause5}
         """
-    sql = base_sql.format(where_clause=where_clause)
-    params5 = ()
-    if cost_center:
-        where_clause = "WHERE cost_center = ?"
-        params5 = (cost_center,)
+    sql = base_sql.format(where_clause5=where_clause5)
+    
+    
+   
     cursor.execute(sql, params5)
     success_status = cursor.fetchone()
 
@@ -238,7 +292,7 @@ def dashboard(request: Request, cost_center: str = None ):
         "assets_values": assets_values,
         "disposal": disposal,
         "asset_status":asset_status,
-        "asset_status_desc":asset_status_desc,
+        # "asset_status_desc":asset_status_desc,
         "assets_status_mapping": assets_status_mapping,
         "status_mapping": status_mapping,
         "success_values": success_values
@@ -273,8 +327,9 @@ async def update_status(
 ):
     image_base64 = None
     if image_file and image_file.filename:
-        image_data = await image_file.read()
-        image_base64 = base64.b64encode(image_data).decode("utf-8")
+        new_file = compress_image(image_file)
+        new_file_data = new_file.read()
+        image_base64 = base64.b64encode(new_file_data).decode("utf-8")
 
     conn = sqlite3.connect(DB_PATH)
     cursor = conn.cursor()
@@ -316,7 +371,7 @@ def asset_detail(request: Request, id: int,cost_center:str="",disposal_status:st
     asset = cursor.fetchone()
 
     cursor.execute("""
-        SELECT id,status_code, status_description, ref_document, changed_at
+        SELECT id,status_code, status_description, ref_document, changed_at,asset_id
         FROM disposal_status_log
         WHERE asset_id = ?
         ORDER BY changed_at
@@ -490,6 +545,69 @@ async def report_create(
 
 
 
+from PIL import Image
+import io
 
+def compress_image(uploaded_file, max_width=1600, quality=90):
+    image = Image.open(uploaded_file.file)
+
+    if image.mode in ("RGBA", "P"):
+        image = image.convert("RGB")
+
+    # Resize (ถ้าจำเป็น)
+    if image.width > max_width:
+        ratio = max_width / image.width
+        new_size = (max_width, int(image.height * ratio))
+        try:
+            resample = Image.Resampling.LANCZOS
+        except AttributeError:
+            resample = Image.ANTIALIAS
+        image = image.resize(new_size, resample)
+
+    compressed_io = io.BytesIO()
+    image.save(
+        compressed_io,
+        format='JPEG',
+        quality=90,
+        subsampling=0,
+        optimize=True
+    )
+    compressed_io.seek(0)
+    return compressed_io
+
+
+
+@app.get("/process")
+async def report_create(
+    request: Request,
+):
+    return templates.TemplateResponse("process.html", {"request":request})
+
+
+@app.post("/assets/{asset_id}/{log_id}/edit-ref")
+def edit_ref_document(
+    asset_id: str,
+    log_id: int,
+    ref_document: str = Form(...),
+    cost_center: str = "",
+    disposal_status: str = "",
+    asset_status: str = ""
+):
+    conn = sqlite3.connect(DB_PATH)
+    conn.row_factory = sqlite3.Row
+    cursor = conn.cursor()
+    cursor.execute("""
+        UPDATE disposal_status_log
+        SET ref_document = ?
+        WHERE id = ?
+    """, (ref_document, log_id))
+    conn.commit()
+
+    return RedirectResponse(
+        url=f"/asset/{asset_id}?cost_center={cost_center}&disposal_status={disposal_status}&asset_status={asset_status}",
+        status_code=303
+    )
+
+    
 
 
