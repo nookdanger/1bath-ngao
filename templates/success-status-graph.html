@@ -11,13 +11,14 @@
   <script>
 
     const success_data = {
-      labels: ["ใช้งานอยู่","รอจำหน่าย","จำหน่ายสำเร็จ"],
+      labels: ["จำหน่ายสำเร็จ","รอจำหน่าย"],
       datasets: [{
         data: {{ success_values | tojson }},
         backgroundColor: [
-        '#8BC34A', // เขียวอ่อน
-        '#FF9F40',  // ส้ม
+              '#8BC34A', // เขียวอ่อน
+        
         '#C9CBCF',  // เทาอ่อน
+
   
       ],
         hoverOffset: 10
