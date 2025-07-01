@@ -324,6 +324,8 @@ async def update_status(
     image_file: UploadFile = None,
     cost_center: str = Form(...),
     disposal_status_selected: str = Form(...),
+    asset_status_selected: str = Form(...),
+    
 ):
     image_base64 = None
     if image_file and image_file.filename:
@@ -334,6 +336,8 @@ async def update_status(
     conn = sqlite3.connect(DB_PATH)
     cursor = conn.cursor()
 
+    if asset_status and asset_status != "2010":
+        disposal_status = "1"
     print("xxxxx :",disposal_status)
     cursor.execute("""
         UPDATE assets 
@@ -346,7 +350,7 @@ async def update_status(
 
     conn.commit()
     conn.close()
-    return RedirectResponse(url=f"/asset?disposal_status={disposal_status_selected}&cost_center={cost_center}&asset_status={asset_status}", status_code=303)
+    return RedirectResponse(url=f"/asset?disposal_status={disposal_status_selected}&cost_center={cost_center}&asset_status={asset_status_selected}", status_code=303)
 
 
 

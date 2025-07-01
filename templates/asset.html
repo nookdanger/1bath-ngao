@@ -88,6 +88,9 @@ function previewImage(input, previewId) {
       const costCenter = document.getElementById('cost_center')?.value || '';
       window.location.href = `/assets?disposal_status=${disposalStatus}&cost_center=${costCenter}`;
     }
+
+   
+
   </script>
   <style>
     * {
@@ -238,30 +241,7 @@ function previewImage(input, previewId) {
         </div>
         <form method="get" action="/asset" class="mb-3" >
           <input type="hidden"  name="cost_center" value="{{ request.query_params.get('cost_center') }}">
-        <div class="input-group">
-          <label class="input-group-text">สถานะการดำเนินการ:</label>
-          <select class="form-select" name="disposal_status" onchange="this.form.submit()">
-            <option value="">---ทั้งหมด---</option>
-            <option value="1" {{ 'selected' if request.query_params.get('disposal_status')=='1' else '' }}>
-              1.รอดำเนินการจำหน่าย</option>
-            <option value="2" {{ 'selected' if request.query_params.get('disposal_status')=='2' else '' }}>
-              2.จัดทำหนังสือขอความเห็นชอบ</option>
-            <option value="3" {{ 'selected' if request.query_params.get('disposal_status')=='3' else '' }}>
-              3.แต่งตั้งคณะกรรมการตรวจสอบข้อเท็จจริง</option>
-            <option value="4" {{ 'selected' if request.query_params.get('disposal_status')=='4' else '' }}>
-              4.รายงานผลการตรวจสอบ</option>
-            <option value="5" {{ 'selected' if request.query_params.get('disposal_status')=='5' else '' }}>
-              5.ขออนุมัติจำหน่าย</option>
-            <option value="6" {{ 'selected' if request.query_params.get('disposal_status')=='6' else '' }}>
-              6.ดำเนินการจำหน่าย/ส่งมอบ</option>
-            <option value="7" {{ 'selected' if request.query_params.get('disposal_status')=='7' else '' }}>
-              7.ส่งมอบของ/จำหน่ายแล้วเสร็จ</option>
-            <option value="8" {{ 'selected' if request.query_params.get('disposal_status')=='8' else '' }}>
-              8.ตัดจำหน่ายในระบบ/โอน</option>
-            <option value="9" {{ 'selected' if request.query_params.get('disposal_status')=='9' else '' }}>
-              9.รายงานผลการจำหน่าย</option>
-          </select>
-        </div>
+       
         <div class="input-group">
           <label class="input-group-text">สถานะของสินทรัพย์:</label>
           <select class="form-select" name="asset_status"  onchange="this.form.submit()">
@@ -294,6 +274,30 @@ function previewImage(input, previewId) {
               สิ้นสุดสัญญาเช่า</option>
           </select>
         </div>
+         <div class="input-group">
+          <label class="input-group-text">สถานะการดำเนินการ:</label>
+          <select class="form-select" name="disposal_status" onchange="this.form.submit()">
+            <option value="">---ทั้งหมด---</option>
+            <option value="1" {{ 'selected' if request.query_params.get('disposal_status')=='1' else '' }}>
+              1.รอดำเนินการจำหน่าย</option>
+            <option value="2" {{ 'selected' if request.query_params.get('disposal_status')=='2' else '' }}>
+              2.จัดทำหนังสือขอความเห็นชอบ</option>
+            <option value="3" {{ 'selected' if request.query_params.get('disposal_status')=='3' else '' }}>
+              3.แต่งตั้งคณะกรรมการตรวจสอบข้อเท็จจริง</option>
+            <option value="4" {{ 'selected' if request.query_params.get('disposal_status')=='4' else '' }}>
+              4.รายงานผลการตรวจสอบ</option>
+            <option value="5" {{ 'selected' if request.query_params.get('disposal_status')=='5' else '' }}>
+              5.ขออนุมัติจำหน่าย</option>
+            <option value="6" {{ 'selected' if request.query_params.get('disposal_status')=='6' else '' }}>
+              6.ดำเนินการจำหน่าย/ส่งมอบ</option>
+            <option value="7" {{ 'selected' if request.query_params.get('disposal_status')=='7' else '' }}>
+              7.ส่งมอบของ/จำหน่ายแล้วเสร็จ</option>
+            <option value="8" {{ 'selected' if request.query_params.get('disposal_status')=='8' else '' }}>
+              8.ตัดจำหน่ายในระบบ/โอน</option>
+            <option value="9" {{ 'selected' if request.query_params.get('disposal_status')=='9' else '' }}>
+              9.รายงานผลการจำหน่าย</option>
+          </select>
+        </div>
       </form>
       <table class="table table-bordered table-striped mt-3 align-middle">
         <thead class="table-dark">
@@ -314,10 +318,12 @@ function previewImage(input, previewId) {
         </thead>
         <tbody>
           {% for asset in assets %}
-          <form method="post" action="/update-status" enctype="multipart/form-data" onsubmit="document.getElementById('select-{{ asset['id'] }}').disabled = false">
+          <form method="post" action="/update-status" enctype="multipart/form-data" onsubmit="return validateStatus('{{ asset['id'] }}')">
             <input type="hidden" value="{{ request.query_params.get('cost_center') }}" name="cost_center">
             <input type="hidden" value="{{ request.query_params.get('disposal_status')}}"
               name="disposal_status_selected">
+             <input type="hidden" value="{{ request.query_params.get('asset_status')}}"
+              name="asset_status_selected">
             <tr>
               <td onclick="window.location='/asset/{{ asset['id'] }}?cost_center={{ request.query_params.get('cost_center') }}&disposal_status={{ request.query_params.get('disposal_status')}}&asset_status={{ request.query_params.get('asset_status')}}'" style="cursor: pointer;">{{ loop.index }}</td>
               <td>{{ asset["asset_id"] }}</td>
@@ -346,17 +352,29 @@ function previewImage(input, previewId) {
                   <option value="4020" {% if asset["asset_status"]=='4020' %}selected{% endif %}>4020: สิ้นสุดสัญญาเช่า</option> 
               </td>
               <td>
+                {% set current_status = asset["disposal_status"] | int %}
                 <select name="disposal_status" class="form-select form-select-sm" id="select-{{ asset['id'] }}" disabled
                   onchange="handleStatusChange(this, '{{ asset['id'] }}')">
-                  <option value="1" {% if asset["disposal_status"]=='1' %}selected{% endif %}>1: รอดำเนินการจำหน่าย/โอน</option>
-                  <option value="2" {% if asset["disposal_status"]=='2' %}selected{% endif %}>2: จัดทำหนังสือขอความเห็นชอบ</option>
-                  <option value="3" {% if asset["disposal_status"]=='3' %}selected{% endif %}>3: แต่งตั้งคณะกรรมการตรวจสอบข้อเท็จจริง</option>
-                  <option value="4" {% if asset["disposal_status"]=='4' %}selected{% endif %}>4: รายงานผลการตรวจสอบ</option>
-                  <option value="5" {% if asset["disposal_status"]=='5' %}selected{% endif %}>5: ขออนุมัติจำหน่าย</option>
-                  <option value="6" {% if asset["disposal_status"]=='6' %}selected{% endif %}>6: ดำเนินการจำหน่าย/รอส่งมอบ</option>
-                  <option value="7" {% if asset["disposal_status"]=='7' %}selected{% endif %}>7: ส่งมอบของ/จำหน่ายแล้วเสร็จ</option>
-                  <option value="8" {% if asset["disposal_status"]=='8' %}selected{% endif %}>8: ตัดจำหน่าย/โอน ในระบบ SAP</option>
-                  <option value="9" {% if asset["disposal_status"]=='9' %}selected{% endif %}>9: รายงานผลการจำหน่าย/โอน</option>
+
+                  {% for value, label in [
+                    ('', '--เลือก--'),
+                    ('1', '1: รอดำเนินการจำหน่าย/โอน'),
+                    ('2', '2: จัดทำหนังสือขอความเห็นชอบ'),
+                    ('3', '3: แต่งตั้งคณะกรรมการตรวจสอบข้อเท็จจริง'),
+                    ('4', '4: รายงานผลการตรวจสอบ'),
+                    ('5', '5: ขออนุมัติจำหน่าย'),
+                    ('6', '6: ดำเนินการจำหน่าย/รอส่งมอบ'),
+                    ('7', '7: ส่งมอบของ/จำหน่ายแล้วเสร็จ'),
+                    ('8', '8: ตัดจำหน่าย/โอน ในระบบ SAP'),
+                    ('9', '9: รายงานผลการจำหน่าย/โอน')
+                  ] %}
+                    {% set step = value | int %}
+                    <option value="{{ value }}"
+                      {% if asset["disposal_status"] == value %}selected{% endif %}
+                      {% if step != current_status and step != current_status + 1 %}disabled{% endif %}>
+                      {{ label }}
+                    </option>
+                  {% endfor %}
                 </select>
               </td>
               <td>
@@ -475,6 +493,23 @@ function previewImage(input, previewId) {
     }
 
   });
+
+  function validateStatus(assetId) {
+
+    const assetStatus = document.getElementById(`select-asset_status-${assetId}`)?.value;
+    const disposalStatus = document.getElementById(`select-${assetId}`)?.value;
+    // ถ้า asset_status ≠ 2010 แล้วยังไม่เลือก disposal_status
+    if (assetStatus !== "2010" && (!disposalStatus || disposalStatus === "")) {
+      alert("กรุณาเลือกสถานะดำเนินการก่อนบันทึก หากสถานะสินทรัพย์ไม่ใช่ 'ติดตั้ง/ใช้งาน'");
+      document.getElementById(`select-${assetId}`).focus()
+      return false; // ยกเลิก submit
+    }
+
+    // เปิด select disposal_status ที่ถูก disable ไว้ก่อน submit
+    document.getElementById(`select-${assetId}`).disabled = false;
+    return true; // ให้ submit ได้
+  }
+
 </script>
 
 </html>
