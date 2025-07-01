@@ -70,37 +70,55 @@ def checkEmptyNone(value: str):
     return value and value != "None" and value != ""
 
 @app.get("/asset", response_class=HTMLResponse)
-def dashboard(request: Request, disposal_status: str = "" ,cost_center: str = None, asset_status:str =""):
+def dashboard(
+    request: Request,
+    disposal_status: str = "",
+    cost_center: str = None,
+    asset_status: str = "",
+    search: str = "",
+):
     conn = sqlite3.connect(DB_PATH)
     conn.row_factory = sqlite3.Row
     cursor = conn.cursor()
-    print("cost_center: ",cost_center ," disposal_status: ",disposal_status, "asset_status :",asset_status)
 
-    if checkEmptyNone(disposal_status) and  checkEmptyNone(cost_center) and checkEmptyNone(asset_status):
-        cursor.execute("SELECT * FROM assets WHERE disposal_status = ? and asset_status=? and cost_center=? ORDER BY book_value,id ", (disposal_status,asset_status,cost_center))
-    elif checkEmptyNone(disposal_status) and checkEmptyNone(cost_center):
-        cursor.execute("SELECT * FROM assets WHERE disposal_status = ? and cost_center= ? ORDER BY book_value,id ", (disposal_status,cost_center,))
-    elif checkEmptyNone(disposal_status) and  not checkEmptyNone(cost_center):
-        cursor.execute("SELECT * FROM assets WHERE disposal_status = ? ORDER BY book_value,id ", (disposal_status,))
-  
-    
+    where_clauses = []
+    params = []
 
-    elif checkEmptyNone(asset_status) and checkEmptyNone(cost_center):
-        cursor.execute("SELECT * FROM assets WHERE asset_status = ? and cost_center= ? ORDER BY book_value,id ", (asset_status,cost_center,))
-    elif checkEmptyNone(asset_status) and  not checkEmptyNone(cost_center):
-        cursor.execute("SELECT * FROM assets WHERE asset_status = ? ORDER BY book_value,id ", (asset_status,))
+    # เงื่อนไข search
+    if checkEmptyNone(search):
+        where_clauses.append("(description LIKE ? OR asset_id LIKE ?)")
+        keyword = f"%{search}%"
+        params.extend([keyword, keyword])
 
-    elif  not checkEmptyNone(asset_status) and not checkEmptyNone(asset_status) and  checkEmptyNone(cost_center):
-        cursor.execute("SELECT * FROM assets WHERE cost_center = ? ORDER BY book_value,id ", (cost_center,))
-    else:
-        cursor.execute("SELECT * FROM assets ORDER BY book_value,id ")
+    # เงื่อนไขอื่น ๆ
+    if checkEmptyNone(disposal_status):
+        where_clauses.append("disposal_status = ?")
+        params.append(disposal_status)
 
+    if checkEmptyNone(cost_center):
+        where_clauses.append("cost_center = ?")
+        params.append(cost_center)
+
+    if checkEmptyNone(asset_status):
+        where_clauses.append("asset_status = ?")
+        params.append(asset_status)
+
+    # สร้าง SQL
+    sql = "SELECT * FROM assets"
+    if where_clauses:
+        sql += " WHERE " + " AND ".join(where_clauses)
+    sql += " ORDER BY book_value, id"
+
+    # print(sql, params)  # debug ได้ถ้าต้องการ
+    cursor.execute(sql, tuple(params))
     rows = cursor.fetchall()
     conn.close()
+
     return templates.TemplateResponse("asset.html", {
         "request": request,
         "assets": rows
     })
+
 
 
 @app.get("/main", response_class=HTMLResponse)

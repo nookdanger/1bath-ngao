@@ -298,6 +298,10 @@ function previewImage(input, previewId) {
               9.รายงานผลการจำหน่าย</option>
           </select>
         </div>
+        <div class="input-group">
+          <label class="input-group-text">ค้นหาด้วยคำอธิบายหรือรหัส:</label>
+          <input type="text" name="search" value="{{ request.query_params.get('search', '') }}" placeholder="ค้นหาด้วยคำอธิบายหรือรหัส">
+        </div>
       </form>
       <table class="table table-bordered table-striped mt-3 align-middle">
         <thead class="table-dark">
