@@ -286,9 +286,19 @@ def dashboard(request: Request, cost_center: str = None ):
     cursor = conn.cursor()
     base_sql = """
         SELECT
-            ROUND(SUM(CASE WHEN asset_status = '2010' AND (disposal_status IS NULL OR disposal_status = '0') THEN 1 ELSE 0 END) * 100.0 / COUNT(*), 2) AS percent_in_use,
-            ROUND(SUM(CASE WHEN asset_status != '2010' AND disposal_status IN ('0','1','2','3','4','5','6','7','8','10') THEN 1 ELSE 0 END) * 100.0 / COUNT(*), 2) AS percent_waiting_disposal,
-            ROUND(SUM(CASE WHEN asset_status != '2010' AND disposal_status = '9' THEN 1 ELSE 0 END) * 100.0 / COUNT(*), 2) AS percent_disposed
+               ROUND(SUM(
+                CASE 
+                    WHEN asset_status = '2010'
+                    OR (asset_status != '2010' AND disposal_status = '9')
+                    THEN 1 ELSE 0
+                END) * 100.0 / COUNT(*), 2) AS percent_disposed,
+
+            -- ยังไม่สำเร็จ = ที่เหลือทั้งหมด
+            ROUND(SUM(
+                CASE 
+                    WHEN asset_status != '2010' AND (disposal_status IS NULL OR disposal_status != '9')
+                    THEN 1 ELSE 0
+                END) * 100.0 / COUNT(*), 2) AS percent_not_disposed
         FROM assets
         {where_clause5}
         """
@@ -298,7 +308,8 @@ def dashboard(request: Request, cost_center: str = None ):
    
     cursor.execute(sql, params5)
     success_status = cursor.fetchone()
-
+    print("จำนวนแถวที่ได้", len(success_status))
+    print("ค่าที่ได้", success_status)
     success_values = list(success_status)
 
     conn.close()

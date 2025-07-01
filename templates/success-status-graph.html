@@ -6,19 +6,20 @@
 </head>
 <body>
   <h2>ความสำเร็จของการจำหน่ายทรัพย์สิน</h2>
+
   <canvas id="success" width="400" height="400"></canvas>
 
   <script>
 
     const success_data = {
-      labels: ["จำหน่ายสำเร็จ","รอจำหน่าย"],
+      labels: ["จำหน่ายสำเร็จ","รอจำหน่าย",],
       datasets: [{
         data: {{ success_values | tojson }},
         backgroundColor: [
               '#8BC34A', // เขียวอ่อน
         
         '#C9CBCF',  // เทาอ่อน
-
+ '#FFCE56',  // เหลือง
   
       ],
         hoverOffset: 10
