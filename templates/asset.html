@@ -336,7 +336,8 @@ function previewImage(input, previewId) {
               <td>{{ asset["sub_number"] }}</td>
               <td>{{ asset["description"] }}</td>
                <td>{{ asset["product_code"] if asset["product_code"] else '' }}</td>
-            <td>{{ asset["capitalized_date"][:10] if asset["capitalized_date"] else '' }}</td>
+        <td>{{ asset["capitalized_date"]|default("")|string }}</td>
+
             
              <td> {{ "{:,.2f}".format(asset["acquisition_value"] or 0) }}</td>
               <td>
@@ -358,6 +359,7 @@ function previewImage(input, previewId) {
                   <option value="4020" {% if asset["asset_status"]=='4020' %}selected{% endif %}>4020: สิ้นสุดสัญญาเช่า</option> 
               </td>
               <td>
+                
                 {% set current_status = asset["disposal_status"] | int %}
                 <select name="disposal_status" class="form-select form-select-sm" id="select-{{ asset['id'] }}" disabled
                   onchange="handleStatusChange(this, '{{ asset['id'] }}')">

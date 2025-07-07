@@ -10,11 +10,11 @@
   <canvas id="success" width="400" height="400"></canvas>
 
   <script>
-
+  
     const success_data = {
       labels: ["จำหน่ายสำเร็จ","รอจำหน่าย",],
       datasets: [{
-        data: {{ success_values | tojson }},
+        data: {{ success_values.values() | list | tojson }},
         backgroundColor: [
               '#8BC34A', // เขียวอ่อน
         

@@ -14,12 +14,15 @@ from jinja2 import Environment, FileSystemLoader
 import shutil
 import pandas as pd
 import psycopg2
+from psycopg2.extras import RealDictCursor
+from decimal import Decimal
+
 
 # Database connection parameters from environment
-PG_HOST = os.getenv("PG_HOST", "localhost")
-PG_DB = os.getenv("PG_DB", "your_db")
-PG_USER = os.getenv("PG_USER", "your_user")
-PG_PASSWORD = os.getenv("PG_PASSWORD", "your_password")
+PG_HOST = os.getenv("PG_HOST", "dpg-d1lodf7diees73fu2pe0-a.oregon-postgres.render.com")
+PG_DB = os.getenv("PG_DB", "db_1bath_ngao")
+PG_USER = os.getenv("PG_USER", "db_1bath_ngao_user")
+PG_PASSWORD = os.getenv("PG_PASSWORD", "8A9I3REUbc8tKzzAY3SKapz0nN4b5ZCm")
 PG_PORT = os.getenv("PG_PORT", "5432")
 
 app = FastAPI()
@@ -60,6 +63,11 @@ cost_center_mapping = {
     "A303701030": "แผนกสนับสนุน",
     "A303701040": "แผนกมิเตอร์และหม้อแปลง",
 }
+
+def convert_decimal(values):
+    return [float(v or 0) for v in values]
+
+
 def get_assets():
     # conn = sqlite3.connect(DB_PATH)
     conn = psycopg2.connect(
@@ -70,7 +78,7 @@ def get_assets():
         port=PG_PORT
     )
     # conn.row_factory = sqlite3.Row
-    cursor = conn.cursor()
+    cursor = conn.cursor(cursor_factory=RealDictCursor)
     cursor.execute("""
         SELECT * FROM assets 
         ORDER BY asset_id ASC
@@ -80,6 +88,14 @@ def get_assets():
     conn.close()
     return assets
 
+def convert_decimal(obj):
+    if isinstance(obj, list):
+        return [convert_decimal(x) for x in obj]
+    elif isinstance(obj, dict):
+        return {k: convert_decimal(v) for k, v in obj.items()}
+    elif isinstance(obj, Decimal):
+        return float(obj)
+    return obj
 
 def checkEmptyNone(value: str):
     return value and value != "None" and value != ""
@@ -100,7 +116,7 @@ def dashboard(
         password=PG_PASSWORD,
         port=PG_PORT
     )
-    cursor = conn.cursor()
+    cursor = conn.cursor(cursor_factory=RealDictCursor)
 
     where_clauses = []
     params = []
@@ -156,7 +172,7 @@ def dashboard(request: Request, cost_center: str = None ):
 
 
     
-    cursor = conn.cursor()
+    cursor = conn.cursor(cursor_factory=RealDictCursor)
     base_sql = """
         SELECT
             disposal_status,
@@ -178,16 +194,20 @@ def dashboard(request: Request, cost_center: str = None ):
     rows = cursor.fetchall()
     disposal_labels = []
     disposal_values = []
-    for disposal_status, count,percentage in rows:
-        label = status_mapping.get(disposal_status, None)
+    for row in rows:
+        status = row['disposal_status']
+        count = row['count']
+        percentage = float(row['percentage']) if row['percentage'] is not None else 0
+        label = status_mapping.get(status, None)
         if label:
             disposal_labels.append(label)
             disposal_values.append(percentage)
+    
 
 
 
 
-    cursor = conn.cursor()
+    cursor = conn.cursor(cursor_factory=RealDictCursor)
     base_sql = """
        SELECT
         asset_status,
@@ -205,17 +225,24 @@ def dashboard(request: Request, cost_center: str = None ):
         params2 = (cost_center,cost_center)
     cursor.execute(sql, params2)
     rows = cursor.fetchall()
-   
+    
     assets_labels = []
     assets_values = []
-    for status, count,percentage in rows:
-        label = assets_status_mapping.get(status,None)
+    for row in rows:
+        status = row['asset_status']
+        count = row['count']
+        percentage = float(row['percentage']) if row['percentage'] is not None else 0
+
+        label = assets_status_mapping.get(status, None)
+        print("label:", label)
+        print("count:", count)
+
         if label:
             assets_labels.append(label)
             assets_values.append(percentage)
     
     
-    cursor = conn.cursor()
+    cursor = conn.cursor(cursor_factory=RealDictCursor)
     where_clause1 = ""
     params3 = ()
     if cost_center:
@@ -255,7 +282,7 @@ def dashboard(request: Request, cost_center: str = None ):
 
 
 
-    cursor = conn.cursor()
+    cursor = conn.cursor(cursor_factory=RealDictCursor)
     where_clause =""
     params2 = ()
     if cost_center:
@@ -311,7 +338,7 @@ def dashboard(request: Request, cost_center: str = None ):
     if cost_center:
         where_clause5 = "WHERE cost_center = %s"
         params5 = (cost_center,)
-    cursor = conn.cursor()
+    cursor = conn.cursor(cursor_factory=RealDictCursor)
     base_sql = """
         SELECT
                ROUND(SUM(
@@ -338,7 +365,7 @@ def dashboard(request: Request, cost_center: str = None ):
     success_status = cursor.fetchone()
     print("จำนวนแถวที่ได้", len(success_status))
     print("ค่าที่ได้", success_status)
-    success_values = list(success_status)
+    success_values = convert_decimal(success_status)
 
     conn.close()
     return templates.TemplateResponse("main.html", {
@@ -366,7 +393,7 @@ def dashboard(request: Request, disposal_status: str = None):
         port=PG_PORT
     )
     # conn.row_factory = sqlite3.Row
-    cursor = conn.cursor()
+    cursor = conn.cursor(cursor_factory=RealDictCursor)
 
     if disposal_status:
         cursor.execute("SELECT * FROM assets WHERE disposal_status = %s and book_value = 1 ORDER BY id ", (disposal_status,))
@@ -406,7 +433,7 @@ async def update_status(
         password=PG_PASSWORD,
         port=PG_PORT
     )
-    cursor = conn.cursor()
+    cursor = conn.cursor(cursor_factory=RealDictCursor)
 
     if asset_status and asset_status != "2010" and disposal_status == "":
         disposal_status = "1"
@@ -436,7 +463,7 @@ def delete_image(id: int,disposal_status:str = "",cost_center:str ="",asset_stat
         password=PG_PASSWORD,
         port=PG_PORT
     )
-    cursor = conn.cursor()
+    cursor = conn.cursor(cursor_factory=RealDictCursor)
     cursor.execute("UPDATE assets SET image = NULL WHERE id = %s", (id,))
     conn.commit()
     conn.close()
@@ -455,7 +482,7 @@ def asset_detail(request: Request, id: int,cost_center:str="",disposal_status:st
         port=PG_PORT
     )
     # conn.row_factory = sqlite3.Row
-    cursor = conn.cursor()
+    cursor = conn.cursor(cursor_factory=RealDictCursor)
 
     cursor.execute("SELECT * FROM assets WHERE id = %s", (id,))
     asset = cursor.fetchone()
@@ -465,7 +492,7 @@ def asset_detail(request: Request, id: int,cost_center:str="",disposal_status:st
         FROM disposal_status_log
         WHERE asset_id = %s
         ORDER BY changed_at
-    """, (id,))
+    """, (str(id),))
     logs =  cursor.fetchall()
 
     return templates.TemplateResponse("asset_detail.html", {
@@ -496,7 +523,7 @@ def log_disposal_status(
         port=PG_PORT
     )
     # conn.row_factory = sqlite3.Row
-    cursor = conn.cursor()
+    cursor = conn.cursor(cursor_factory=RealDictCursor)
 
     # เช็คว่ามี log เดิมไหม
     cursor.execute("""
@@ -539,7 +566,7 @@ def delete_asset(request: Request,asset_log_id: int ,disposal_status: str="",cos
         port=PG_PORT
     )
     # conn.row_factory = sqlite3.Row
-    cursor = conn.cursor()
+    cursor = conn.cursor(cursor_factory=RealDictCursor)
     cursor.execute("SELECT asset_id FROM disposal_status_log WHERE id = %s", (asset_log_id,))
     row = cursor.fetchone()
 
@@ -623,7 +650,7 @@ def dashboard(request: Request ,cost_center: str = "", asset_status:str =""):
         password=PG_PASSWORD,
         port=PG_PORT
     )
-    cursor = conn.cursor()
+    cursor = conn.cursor(cursor_factory=RealDictCursor)
     print("cost_center: ",cost_center ,"asset_status :",asset_status)
     if checkEmptyNone(cost_center) and  checkEmptyNone(asset_status) and asset_status == "2010":
         print(1)
@@ -674,7 +701,7 @@ async def report_create(
         password=PG_PASSWORD,
         port=PG_PORT
     )
-    cursor = conn.cursor()
+    cursor = conn.cursor(cursor_factory=RealDictCursor)
 
     # prepare SQL
     placeholders = ','.join(['%s'] * len(select))  # '%s, %s, %s, %s'
@@ -750,7 +777,7 @@ def edit_ref_document(
         password=PG_PASSWORD,
         port=PG_PORT
     )
-    cursor = conn.cursor()
+    cursor = conn.cursor(cursor_factory=RealDictCursor)
     cursor.execute("""
         UPDATE disposal_status_log
         SET ref_document = %s
@@ -830,7 +857,7 @@ async def import_data(request: Request):
         password=PG_PASSWORD,
         port=PG_PORT
     )
-    cursor = conn.cursor()
+    cursor = conn.cursor(cursor_factory=RealDictCursor)
     # Truncate old data before import
     cursor.execute("DELETE FROM assets")
     cursor.execute("DELETE FROM disposal_status_log")

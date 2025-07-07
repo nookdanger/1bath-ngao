@@ -224,23 +224,30 @@
                 </tr>
                 {% endfor %}
               </tbody>
-               <tfoot>
+              <tfoot>
                   <tr>
                     <td><strong>รวม</strong></td>
                     <td>
                       <strong>
-                        {{
-                          '{:,.2f}'.format(
-                            (asset_status | map(attribute='acquisition_value') | select('!=', None) | list | sum)
-                          )
-                        }}
+ 
+                        {{ '{:,.2f}'.format(
+                            asset_status 
+                            | map(attribute='acquisition_value') 
+                            | select('!=', None) 
+                            | sum
+                        ) }}
+
                       </strong>
                     </td>
                     <td>
                       <strong>
-                        {{
-                          asset_status | map(attribute='asset_count') | select('!=', None) | list | sum
-                        }}
+                        {{ '{:,.2f}'.format(
+                            asset_status 
+                            | map(attribute='asset_count') 
+                            | select('!=', None) 
+                            | sum
+                        ) }}
+
                       </strong>
                     </td>
                   </tr>
@@ -283,18 +290,25 @@
                     <td><strong>รวม</strong></td>
                     <td>
                       <strong>
-                        {{
-                          '{:,.2f}'.format(
-                            (disposal | map(attribute='acquisition_value') | select('!=', None) | list | sum)
-                          )
-                        }}
+ 
+                        {{ '{:,.2f}'.format(
+                            disposal 
+                            | map(attribute='acquisition_value') 
+                            | select('!=', None) 
+                            | sum
+                        ) }}
+
                       </strong>
                     </td>
                     <td>
                       <strong>
-                        {{
-                          disposal | map(attribute='asset_count') | select('!=', None) | list | sum
-                        }}
+                        {{ '{:,.2f}'.format(
+                            disposal 
+                            | map(attribute='asset_count') 
+                            | select('!=', None) 
+                            | sum
+                        ) }}
+
                       </strong>
                     </td>
                   </tr>

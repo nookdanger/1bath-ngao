@@ -164,7 +164,7 @@
             <td>{{ asset["sub_number"] }}</td>
             <td>{{ asset["description"] }}</td>
             <td>{{ asset["product_code"] or '' }}</td>
-            <td>{{ asset["capitalized_date"][:10] if asset["capitalized_date"] else '' }}</td>
+         <td>{{ asset["capitalized_date"]|default("")|string }}</td>
             <td>{{ "{:,.2f}".format(asset["acquisition_value"] or 0) }}</td>
             <td>{{ assets_status_mapping.get(asset["asset_status"], asset["asset_status"]) }}</td>
             <td>{{ status_mapping.get(asset["disposal_status"], '-') }}</td>
