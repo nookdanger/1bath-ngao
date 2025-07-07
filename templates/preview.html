@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Preview Import</title>
+    <style>
+        table, th, td {
+            border: 1px solid black;
+            border-collapse: collapse;
+            padding: 4px;
+        }
+        th {
+            background-color: #f0f0f0;
+        }
+        .invalid {
+            background-color: #ffdddd;
+        }
+    </style>
+</head>
+<body>
+    <h2>Preview Valid Data</h2>
+   <form action="/import" method="post">
+        <label>Secret Code:</label>
+        <input type="password" name="secret_code" required>
+        <button type="submit">Import Valid Data</button>
+    </form>
+    <br>
+    <table>
+        <thead>
+            <tr>
+                {% for col in columns %}
+                    <th>{{ col }}</th>
+                {% endfor %}
+            </tr>
+        </thead>
+        <tbody>
+            {% for row in valid_data %}
+            <tr>
+                {% for cell in row %}
+                <td>{{ cell }}</td>
+                {% endfor %}
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+    <h2>Invalid Data (Not Imported)</h2>
+    <table>
+        <thead>
+            <tr>
+                {% for col in columns %}
+                    <th>{{ col }}</th>
+                {% endfor %}
+            </tr>
+        </thead>
+        <tbody>
+            {% for row in invalid_data %}
+            <tr class="invalid">
+                {% for cell in row %}
+                <td>{{ cell }}</td>
+                {% endfor %}
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</body>
+</html>

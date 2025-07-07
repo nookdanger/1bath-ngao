@@ -11,8 +11,8 @@ from typing import Optional
 from fastapi.staticfiles import StaticFiles
 from datetime import datetime
 from jinja2 import Environment, FileSystemLoader
-
-
+import shutil
+import pandas as pd
 
 app = FastAPI()
 templates = Jinja2Templates(directory="templates")
@@ -354,6 +354,7 @@ async def update_status(
     cost_center: str = Form(...),
     disposal_status_selected: str = Form(...),
     asset_status_selected: str = Form(...),
+     search: str = Form(...),
     
 ):
     image_base64 = None
@@ -365,9 +366,9 @@ async def update_status(
     conn = sqlite3.connect(DB_PATH)
     cursor = conn.cursor()
 
-    if asset_status and asset_status != "2010":
+    if asset_status and asset_status != "2010" and disposal_status == "":
         disposal_status = "1"
-    print("xxxxx :",disposal_status)
+    
     cursor.execute("""
         UPDATE assets 
         SET disposal_status = ?, 
@@ -379,7 +380,7 @@ async def update_status(
 
     conn.commit()
     conn.close()
-    return RedirectResponse(url=f"/asset?disposal_status={disposal_status_selected}&cost_center={cost_center}&asset_status={asset_status_selected}", status_code=303)
+    return RedirectResponse(url=f"/asset?disposal_status={disposal_status_selected}&cost_center={cost_center}&asset_status={asset_status_selected}&search={search}", status_code=303)
 
 
 
@@ -671,6 +672,83 @@ def edit_ref_document(
         status_code=303
     )
 
-    
 
 
+UPLOAD_DIR = "uploads"
+os.makedirs(UPLOAD_DIR, exist_ok=True)
+
+
+# Global storage (not recommended for production)
+cached_valid_data = []
+
+@app.get("/", response_class=HTMLResponse)
+async def form_page(request: Request):
+    return templates.TemplateResponse("upload_form.html", {"request": request})
+
+@app.post("/upload", response_class=HTMLResponse)
+async def upload_excel(request: Request, file: UploadFile):
+    global cached_valid_data
+    file_location = os.path.join(UPLOAD_DIR, file.filename)
+    with open(file_location, "wb") as f:
+        shutil.copyfileobj(file.file, f)
+
+    df = pd.read_excel(file_location)
+    df.columns = [
+        "asset_id", "sub_number", "inventory_code", "description",
+        "product_code", "capitalized_date", "acquisition_value",
+        "accumulated_depreciation", "book_value", "asset_status", "cost_center"
+    ]
+
+    df["valid_date"] = df["capitalized_date"].apply(lambda d: validate_date(d))
+    df["duplicate"] = df.duplicated(subset=["asset_id", "sub_number"], keep=False)
+    valid_df = df[df["valid_date"] & (~df["duplicate"])]
+    invalid_df = df[~df["valid_date"] | df["duplicate"]]
+
+    valid_df["capitalized_date"] = pd.to_datetime(valid_df["capitalized_date"]).dt.strftime("%Y-%m-%d")
+    cached_valid_data = valid_df.to_dict(orient='records')
+
+    return templates.TemplateResponse("preview.html", {
+        "request": request,
+        "valid_data": valid_df.values.tolist(),
+        "invalid_data": invalid_df.values.tolist(),
+        "columns": df.columns.tolist()
+    })
+
+def validate_date(date_str):
+    try:
+        pd.to_datetime(date_str, format="%Y-%m-%d")
+        return True
+    except:
+        return False
+
+SECRET_CODE = "123456"  # Secret code required for import
+
+@app.post("/import", response_class=RedirectResponse)
+async def import_data(request: Request):
+    global cached_valid_data
+    form = await request.form()
+    secret_code_input = form.get("secret_code")
+    if secret_code_input != SECRET_CODE:
+        return HTMLResponse("<h3>Invalid secret code. <a href='/'>Go Back</a></h3>")
+    conn = sqlite3.connect(DB_PATH)
+    cursor = conn.cursor()
+    # Truncate old data before import
+    cursor.execute("DELETE FROM assets")
+    cursor.execute("DELETE FROM disposal_status_log")
+    for row in cached_valid_data:
+        cursor.execute('''
+            INSERT INTO assets (
+                asset_id, sub_number, inventory_code, description,
+                product_code, capitalized_date, acquisition_value,
+                accumulated_depreciation, book_value, asset_status, cost_center
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        ''', (
+            row['asset_id'], row['sub_number'], row['inventory_code'], row['description'],
+            row['product_code'], row['capitalized_date'], row['acquisition_value'],
+            row['accumulated_depreciation'], row['book_value'], row['asset_status'],
+            row['cost_center']
+        ))
+    conn.commit()
+    conn.close()
+    cached_valid_data = []
+    return RedirectResponse("/", status_code=303)

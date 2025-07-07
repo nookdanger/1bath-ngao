@@ -328,6 +328,8 @@ function previewImage(input, previewId) {
               name="disposal_status_selected">
              <input type="hidden" value="{{ request.query_params.get('asset_status')}}"
               name="asset_status_selected">
+                 <input type="hidden" value="{{ request.query_params.get('search')}}"
+              name="search">
             <tr>
               <td onclick="window.location='/asset/{{ asset['id'] }}?cost_center={{ request.query_params.get('cost_center') }}&disposal_status={{ request.query_params.get('disposal_status')}}&asset_status={{ request.query_params.get('asset_status')}}'" style="cursor: pointer;">{{ loop.index }}</td>
               <td>{{ asset["asset_id"] }}</td>
