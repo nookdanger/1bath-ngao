@@ -13,6 +13,14 @@ from datetime import datetime
 from jinja2 import Environment, FileSystemLoader
 import shutil
 import pandas as pd
+import psycopg2
+
+# Database connection parameters from environment
+PG_HOST = os.getenv("PG_HOST", "localhost")
+PG_DB = os.getenv("PG_DB", "your_db")
+PG_USER = os.getenv("PG_USER", "your_user")
+PG_PASSWORD = os.getenv("PG_PASSWORD", "your_password")
+PG_PORT = os.getenv("PG_PORT", "5432")
 
 app = FastAPI()
 templates = Jinja2Templates(directory="templates")
@@ -53,8 +61,15 @@ cost_center_mapping = {
     "A303701040": "แผนกมิเตอร์และหม้อแปลง",
 }
 def get_assets():
-    conn = sqlite3.connect(DB_PATH)
-    conn.row_factory = sqlite3.Row
+    # conn = sqlite3.connect(DB_PATH)
+    conn = psycopg2.connect(
+        host=PG_HOST,
+        dbname=PG_DB,
+        user=PG_USER,
+        password=PG_PASSWORD,
+        port=PG_PORT
+    )
+    # conn.row_factory = sqlite3.Row
     cursor = conn.cursor()
     cursor.execute("""
         SELECT * FROM assets 
@@ -77,8 +92,14 @@ def dashboard(
     asset_status: str = "",
     search: str = "",
 ):
-    conn = sqlite3.connect(DB_PATH)
-    conn.row_factory = sqlite3.Row
+    # conn = sqlite3.connect(DB_PATH)
+    conn = psycopg2.connect(
+        host=PG_HOST,
+        dbname=PG_DB,
+        user=PG_USER,
+        password=PG_PASSWORD,
+        port=PG_PORT
+    )
     cursor = conn.cursor()
 
     where_clauses = []
@@ -123,8 +144,15 @@ def dashboard(
 
 @app.get("/main", response_class=HTMLResponse)
 def dashboard(request: Request, cost_center: str = None ):
-    conn = sqlite3.connect("assets.db")
-    conn.row_factory = sqlite3.Row
+    # conn = sqlite3.connect("assets.db")
+    conn = psycopg2.connect(
+        host=PG_HOST,
+        dbname=PG_DB,
+        user=PG_USER,
+        password=PG_PASSWORD,
+        port=PG_PORT
+    )
+    # conn.row_factory = sqlite3.Row
 
 
     
@@ -329,8 +357,15 @@ def dashboard(request: Request, cost_center: str = None ):
 
 @app.get("/graph", response_class=HTMLResponse)
 def dashboard(request: Request, disposal_status: str = None):
-    conn = sqlite3.connect(DB_PATH)
-    conn.row_factory = sqlite3.Row
+    # conn = sqlite3.connect(DB_PATH)
+    conn = psycopg2.connect(
+        host=PG_HOST,
+        dbname=PG_DB,
+        user=PG_USER,
+        password=PG_PASSWORD,
+        port=PG_PORT
+    )
+    # conn.row_factory = sqlite3.Row
     cursor = conn.cursor()
 
     if disposal_status:
@@ -363,7 +398,14 @@ async def update_status(
         new_file_data = new_file.read()
         image_base64 = base64.b64encode(new_file_data).decode("utf-8")
 
-    conn = sqlite3.connect(DB_PATH)
+    # conn = sqlite3.connect(DB_PATH)
+    conn = psycopg2.connect(
+        host=PG_HOST,
+        dbname=PG_DB,
+        user=PG_USER,
+        password=PG_PASSWORD,
+        port=PG_PORT
+    )
     cursor = conn.cursor()
 
     if asset_status and asset_status != "2010" and disposal_status == "":
@@ -386,7 +428,14 @@ async def update_status(
 
 @app.get("/delete-image/{id}")
 def delete_image(id: int,disposal_status:str = "",cost_center:str ="",asset_status:str=""):
-    conn = sqlite3.connect(DB_PATH)
+    # conn = sqlite3.connect(DB_PATH)
+    conn = psycopg2.connect(
+        host=PG_HOST,
+        dbname=PG_DB,
+        user=PG_USER,
+        password=PG_PASSWORD,
+        port=PG_PORT
+    )
     cursor = conn.cursor()
     cursor.execute("UPDATE assets SET image = NULL WHERE id = ?", (id,))
     conn.commit()
@@ -397,8 +446,15 @@ def delete_image(id: int,disposal_status:str = "",cost_center:str ="",asset_stat
 
 @app.get("/asset/{id}", response_class=HTMLResponse)
 def asset_detail(request: Request, id: int,cost_center:str="",disposal_status:str="" ,asset_status:str=""):
-    conn = sqlite3.connect(DB_PATH)
-    conn.row_factory = sqlite3.Row
+    # conn = sqlite3.connect(DB_PATH)
+    conn = psycopg2.connect(
+        host=PG_HOST,
+        dbname=PG_DB,
+        user=PG_USER,
+        password=PG_PASSWORD,
+        port=PG_PORT
+    )
+    # conn.row_factory = sqlite3.Row
     cursor = conn.cursor()
 
     cursor.execute("SELECT * FROM assets WHERE id = ?", (id,))
@@ -431,8 +487,15 @@ def log_disposal_status(
     ref_document: str = Form(...),
     changed_by: str = Form("system")  # default เป็น system หรือใส่ user ได้
 ):
-    conn = sqlite3.connect(DB_PATH)
-    conn.row_factory = sqlite3.Row
+    # conn = sqlite3.connect(DB_PATH)
+    conn = psycopg2.connect(
+        host=PG_HOST,
+        dbname=PG_DB,
+        user=PG_USER,
+        password=PG_PASSWORD,
+        port=PG_PORT
+    )
+    # conn.row_factory = sqlite3.Row
     cursor = conn.cursor()
 
     # เช็คว่ามี log เดิมไหม
@@ -467,8 +530,15 @@ def log_disposal_status(
 
 @app.post("/assets/{asset_log_id}/delete")
 def delete_asset(request: Request,asset_log_id: int ,disposal_status: str="",cost_center:str="",asset_status:str=""):
-    conn = sqlite3.connect(DB_PATH)
-    conn.row_factory = sqlite3.Row
+    # conn = sqlite3.connect(DB_PATH)
+    conn = psycopg2.connect(
+        host=PG_HOST,
+        dbname=PG_DB,
+        user=PG_USER,
+        password=PG_PASSWORD,
+        port=PG_PORT
+    )
+    # conn.row_factory = sqlite3.Row
     cursor = conn.cursor()
     cursor.execute("SELECT asset_id FROM disposal_status_log WHERE id = ?", (asset_log_id,))
     row = cursor.fetchone()
@@ -544,8 +614,15 @@ async def download_files(request: Request):
 
 @app.get("/report", response_class=HTMLResponse)
 def dashboard(request: Request ,cost_center: str = "", asset_status:str =""):
-    conn = sqlite3.connect(DB_PATH)
-    conn.row_factory = sqlite3.Row
+    # conn = sqlite3.connect(DB_PATH)
+    # conn.row_factory = sqlite3.Row
+    conn = psycopg2.connect(
+        host=PG_HOST,
+        dbname=PG_DB,
+        user=PG_USER,
+        password=PG_PASSWORD,
+        port=PG_PORT
+    )
     cursor = conn.cursor()
     print("cost_center: ",cost_center ,"asset_status :",asset_status)
     if checkEmptyNone(cost_center) and  checkEmptyNone(asset_status) and asset_status == "2010":
@@ -588,8 +665,15 @@ async def report_create(
 ):
     print("Selected asset IDs:", select)
 
-    conn = sqlite3.connect(DB_PATH)
-    conn.row_factory = sqlite3.Row
+    # conn = sqlite3.connect(DB_PATH)
+    # conn.row_factory = sqlite3.Row
+    conn = psycopg2.connect(
+        host=PG_HOST,
+        dbname=PG_DB,
+        user=PG_USER,
+        password=PG_PASSWORD,
+        port=PG_PORT
+    )
     cursor = conn.cursor()
 
     # prepare SQL
@@ -657,8 +741,15 @@ def edit_ref_document(
     disposal_status: str = "",
     asset_status: str = ""
 ):
-    conn = sqlite3.connect(DB_PATH)
-    conn.row_factory = sqlite3.Row
+    # conn = sqlite3.connect(DB_PATH)
+    # conn.row_factory = sqlite3.Row
+    conn = psycopg2.connect(
+        host=PG_HOST,
+        dbname=PG_DB,
+        user=PG_USER,
+        password=PG_PASSWORD,
+        port=PG_PORT
+    )
     cursor = conn.cursor()
     cursor.execute("""
         UPDATE disposal_status_log
@@ -730,8 +821,15 @@ async def import_data(request: Request):
     secret_code_input = form.get("secret_code")
     if secret_code_input != SECRET_CODE:
         return HTMLResponse("<h3>Invalid secret code. <a href='/'>Go Back</a></h3>")
-    conn = sqlite3.connect(DB_PATH)
-    cursor = conn.cursor()
+    # conn = sqlite3.connect(DB_PATH)
+    # cursor = conn.cursor()
+    conn = psycopg2.connect(
+        host=PG_HOST,
+        dbname=PG_DB,
+        user=PG_USER,
+        password=PG_PASSWORD,
+        port=PG_PORT
+    )
     # Truncate old data before import
     cursor.execute("DELETE FROM assets")
     cursor.execute("DELETE FROM disposal_status_log")
