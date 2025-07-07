@@ -107,21 +107,21 @@ def dashboard(
 
     # เงื่อนไข search
     if checkEmptyNone(search):
-        where_clauses.append("(description LIKE ? OR asset_id LIKE ?)")
+        where_clauses.append("(description LIKE %s OR asset_id LIKE %s)")
         keyword = f"%{search}%"
         params.extend([keyword, keyword])
 
     # เงื่อนไขอื่น ๆ
     if checkEmptyNone(disposal_status):
-        where_clauses.append("disposal_status = ?")
+        where_clauses.append("disposal_status = %s")
         params.append(disposal_status)
 
     if checkEmptyNone(cost_center):
-        where_clauses.append("cost_center = ?")
+        where_clauses.append("cost_center = %s")
         params.append(cost_center)
 
     if checkEmptyNone(asset_status):
-        where_clauses.append("asset_status = ?")
+        where_clauses.append("asset_status = %s")
         params.append(asset_status)
 
     # สร้าง SQL
@@ -169,7 +169,7 @@ def dashboard(request: Request, cost_center: str = None ):
     where_clause = ""
     params1 = ()
     if cost_center:
-        where_clause = "WHERE cost_center = ?"
+        where_clause = "WHERE cost_center = %s"
         params1 = (cost_center,cost_center)
 
     # ใส่ where_clause ลงใน SQL
@@ -201,7 +201,7 @@ def dashboard(request: Request, cost_center: str = None ):
     sql = base_sql.format(where_clause=where_clause)
     params2 = ()
     if cost_center:
-        where_clause = "WHERE cost_center = ?"
+        where_clause = "WHERE cost_center = %s"
         params2 = (cost_center,cost_center)
     cursor.execute(sql, params2)
     rows = cursor.fetchall()
@@ -219,7 +219,7 @@ def dashboard(request: Request, cost_center: str = None ):
     where_clause1 = ""
     params3 = ()
     if cost_center:
-        where_clause1 = "AND assets.cost_center = ?"
+        where_clause1 = "AND assets.cost_center = %s"
         params3 = (cost_center,)
 
     base_sql = """
@@ -259,7 +259,7 @@ def dashboard(request: Request, cost_center: str = None ):
     where_clause =""
     params2 = ()
     if cost_center:
-        where_clause  = "AND assets.cost_center = ?"
+        where_clause  = "AND assets.cost_center = %s"
         params2 = (cost_center,)
 
 
@@ -309,7 +309,7 @@ def dashboard(request: Request, cost_center: str = None ):
     where_clause5 =""
     params5 =()
     if cost_center:
-        where_clause5 = "WHERE cost_center = ?"
+        where_clause5 = "WHERE cost_center = %s"
         params5 = (cost_center,)
     cursor = conn.cursor()
     base_sql = """
@@ -369,7 +369,7 @@ def dashboard(request: Request, disposal_status: str = None):
     cursor = conn.cursor()
 
     if disposal_status:
-        cursor.execute("SELECT * FROM assets WHERE disposal_status = ? and book_value = 1 ORDER BY id ", (disposal_status,))
+        cursor.execute("SELECT * FROM assets WHERE disposal_status = %s and book_value = 1 ORDER BY id ", (disposal_status,))
     else:
         cursor.execute("SELECT * FROM assets WHERE book_value = 1 ORDER BY id ")
 
@@ -413,10 +413,10 @@ async def update_status(
     
     cursor.execute("""
         UPDATE assets 
-        SET disposal_status = ?, 
-            asset_status = ?,
-            image = COALESCE(?, image)
-        WHERE id = ?
+        SET disposal_status = %s, 
+            asset_status = %s,
+            image = COALESCE(%s, image)
+        WHERE id = %s
     """, (disposal_status,asset_status, image_base64, id))
 
 
@@ -437,7 +437,7 @@ def delete_image(id: int,disposal_status:str = "",cost_center:str ="",asset_stat
         port=PG_PORT
     )
     cursor = conn.cursor()
-    cursor.execute("UPDATE assets SET image = NULL WHERE id = ?", (id,))
+    cursor.execute("UPDATE assets SET image = NULL WHERE id = %s", (id,))
     conn.commit()
     conn.close()
     return RedirectResponse(url=f"/asset?disposal_status={disposal_status}&cost_center={cost_center}&asset_status={asset_status}", status_code=303)
@@ -457,13 +457,13 @@ def asset_detail(request: Request, id: int,cost_center:str="",disposal_status:st
     # conn.row_factory = sqlite3.Row
     cursor = conn.cursor()
 
-    cursor.execute("SELECT * FROM assets WHERE id = ?", (id,))
+    cursor.execute("SELECT * FROM assets WHERE id = %s", (id,))
     asset = cursor.fetchone()
 
     cursor.execute("""
         SELECT id,status_code, status_description, ref_document, changed_at,asset_id
         FROM disposal_status_log
-        WHERE asset_id = ?
+        WHERE asset_id = %s
         ORDER BY changed_at
     """, (id,))
     logs =  cursor.fetchall()
@@ -501,7 +501,7 @@ def log_disposal_status(
     # เช็คว่ามี log เดิมไหม
     cursor.execute("""
         SELECT id FROM disposal_status_log
-        WHERE asset_id = ? AND status_code = ?
+        WHERE asset_id = %s AND status_code = %s
     """, (asset_id, status_code))
     row = cursor.fetchone()
 
@@ -511,8 +511,8 @@ def log_disposal_status(
         # update log เดิม
         cursor.execute("""
             UPDATE disposal_status_log
-            SET ref_document = ?, changed_at = ?, changed_by = ?
-            WHERE id = ?
+            SET ref_document = %s, changed_at = %s, changed_by = %s
+            WHERE id = %s
         """, (ref_document, now, changed_by, row["id"]))
     else:
         # insert ใหม่
@@ -520,7 +520,7 @@ def log_disposal_status(
             INSERT INTO disposal_status_log (
                 asset_id, status_code, status_description,
                 ref_document, changed_at, changed_by
-            ) VALUES (?, ?, ?, ?, ?, ?)
+            ) VALUES (%s, %s, %s, %s, %s, %s)
         """, (asset_id, status_code, status_description, ref_document, now, changed_by))
 
     conn.commit()
@@ -540,7 +540,7 @@ def delete_asset(request: Request,asset_log_id: int ,disposal_status: str="",cos
     )
     # conn.row_factory = sqlite3.Row
     cursor = conn.cursor()
-    cursor.execute("SELECT asset_id FROM disposal_status_log WHERE id = ?", (asset_log_id,))
+    cursor.execute("SELECT asset_id FROM disposal_status_log WHERE id = %s", (asset_log_id,))
     row = cursor.fetchone()
 
     if row is None:
@@ -549,7 +549,7 @@ def delete_asset(request: Request,asset_log_id: int ,disposal_status: str="",cos
 
     asset_id = row["asset_id"]
     # ลบ log
-    cursor.execute("DELETE FROM disposal_status_log WHERE id = ?", (asset_log_id,))
+    cursor.execute("DELETE FROM disposal_status_log WHERE id = %s", (asset_log_id,))
     conn.commit()
     conn.close()
 
@@ -627,19 +627,19 @@ def dashboard(request: Request ,cost_center: str = "", asset_status:str =""):
     print("cost_center: ",cost_center ,"asset_status :",asset_status)
     if checkEmptyNone(cost_center) and  checkEmptyNone(asset_status) and asset_status == "2010":
         print(1)
-        cursor.execute("SELECT * FROM assets where cost_center =? and asset_status =? ORDER BY book_value,id ", (cost_center,asset_status))
+        cursor.execute("SELECT * FROM assets where cost_center =%s and asset_status =%s ORDER BY book_value,id ", (cost_center,asset_status))
     elif checkEmptyNone(cost_center) and  checkEmptyNone(asset_status) and asset_status == "0000":
         print(11)
-        cursor.execute("SELECT * FROM assets where cost_center =? and asset_status !=? ORDER BY book_value,id ", (cost_center,"2010"))
+        cursor.execute("SELECT * FROM assets where cost_center =%s and asset_status !=%s ORDER BY book_value,id ", (cost_center,"2010"))
     elif checkEmptyNone(cost_center) and  not checkEmptyNone(asset_status):
         print(111)
-        cursor.execute("SELECT * FROM assets where cost_center =?  ORDER BY book_value,id ", (cost_center,))
+        cursor.execute("SELECT * FROM assets where cost_center =%s  ORDER BY book_value,id ", (cost_center,))
     elif not checkEmptyNone(cost_center) and   checkEmptyNone(asset_status) and asset_status == "2010":
         print(1111)
-        cursor.execute("SELECT * FROM assets where asset_status =?  ORDER BY book_value,id ", (asset_status,))
+        cursor.execute("SELECT * FROM assets where asset_status =%s  ORDER BY book_value,id ", (asset_status,))
     elif not checkEmptyNone(cost_center) and   checkEmptyNone(asset_status) and asset_status == "0000":
         print(11112)
-        cursor.execute("SELECT * FROM assets where asset_status !=?  ORDER BY book_value,id ", ("2010",))
+        cursor.execute("SELECT * FROM assets where asset_status !=%s  ORDER BY book_value,id ", ("2010",))
     elif not checkEmptyNone(cost_center) and  not checkEmptyNone(asset_status):
         print(11111)
         cursor.execute("SELECT * FROM assets ORDER BY book_value,id ")
@@ -677,7 +677,7 @@ async def report_create(
     cursor = conn.cursor()
 
     # prepare SQL
-    placeholders = ','.join(['?'] * len(select))  # '?, ?, ?, ?'
+    placeholders = ','.join(['%s'] * len(select))  # '%s, %s, %s, %s'
     query = f"SELECT * FROM assets WHERE id IN ({placeholders}) ORDER BY book_value, id"
     cursor.execute(query, select)
     rows = cursor.fetchall()
@@ -753,8 +753,8 @@ def edit_ref_document(
     cursor = conn.cursor()
     cursor.execute("""
         UPDATE disposal_status_log
-        SET ref_document = ?
-        WHERE id = ?
+        SET ref_document = %s
+        WHERE id = %s
     """, (ref_document, log_id))
     conn.commit()
 
@@ -840,7 +840,7 @@ async def import_data(request: Request):
                 asset_id, sub_number, inventory_code, description,
                 product_code, capitalized_date, acquisition_value,
                 accumulated_depreciation, book_value, asset_status, cost_center
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
         ''', (
             row['asset_id'], row['sub_number'], row['inventory_code'], row['description'],
             row['product_code'], row['capitalized_date'], row['acquisition_value'],
