@@ -211,7 +211,7 @@ def dashboard(request: Request, cost_center: str = None ):
             status_map.disposal_status,
             status_map.status_name,
             COUNT(assets.id) AS asset_count,
-            SUM(assets.book_value) AS total_book_value
+            SUM(assets.acquisition_value) AS acquisition_value
         FROM status_map
         LEFT JOIN assets ON status_map.disposal_status = assets.disposal_status
         {where_clause1}
@@ -256,7 +256,7 @@ def dashboard(request: Request, cost_center: str = None ):
             status_map.asset_status,
             status_map.status_name,
             COUNT(assets.id) AS asset_count,
-            SUM(assets.book_value) AS total_book_value
+            SUM(assets.acquisition_value) AS acquisition_value
         FROM status_map
         LEFT JOIN assets ON status_map.asset_status = assets.asset_status
         {where_clause}

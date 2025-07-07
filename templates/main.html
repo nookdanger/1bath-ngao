@@ -219,11 +219,32 @@
                   <tr onclick="goToAssetPageฺิByAssetStatus('{{ status['asset_status'] }}')">
                   <td>{{ status["status_name"] }}</td>
                   
-                  <td>{{ '{:,.2f}'.format(status["total_book_value"] or 0) }}</td>
+                  <td>{{ '{:,.2f}'.format(status["acquisition_value"] or 0) }}</td>
                   <td>{{ status["asset_count"] }}</td>
                 </tr>
                 {% endfor %}
               </tbody>
+               <tfoot>
+                  <tr>
+                    <td><strong>รวม</strong></td>
+                    <td>
+                      <strong>
+                        {{
+                          '{:,.2f}'.format(
+                            (asset_status | map(attribute='acquisition_value') | select('!=', None) | list | sum)
+                          )
+                        }}
+                      </strong>
+                    </td>
+                    <td>
+                      <strong>
+                        {{
+                          asset_status | map(attribute='asset_count') | select('!=', None) | list | sum
+                        }}
+                      </strong>
+                    </td>
+                  </tr>
+                </tfoot>
             </table>
           </div>
         </div>
@@ -251,12 +272,33 @@
                 {% for disposal in disposal %}
                 <tr onclick="goToAssetPage('{{ disposal['disposal_status'] }}')">
                   <td>{{ status_mapping[disposal["disposal_status"] | string] }}</td>
-                <td>{{ '{:,.2f}'.format(disposal["total_book_value"] or 0) }}</td>
+                <td>{{ '{:,.2f}'.format(disposal["acquisition_value"] or 0) }}</td>
                   <td>{{ disposal["asset_count"] }}</td>
                 </tr>
                 {% endfor %}
 
               </tbody>
+               <tfoot>
+                  <tr>
+                    <td><strong>รวม</strong></td>
+                    <td>
+                      <strong>
+                        {{
+                          '{:,.2f}'.format(
+                            (disposal | map(attribute='acquisition_value') | select('!=', None) | list | sum)
+                          )
+                        }}
+                      </strong>
+                    </td>
+                    <td>
+                      <strong>
+                        {{
+                          disposal | map(attribute='asset_count') | select('!=', None) | list | sum
+                        }}
+                      </strong>
+                    </td>
+                  </tr>
+                </tfoot>
             </table>
           </div>
         </div>
