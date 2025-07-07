@@ -822,7 +822,7 @@ async def import_data(request: Request):
     if secret_code_input != SECRET_CODE:
         return HTMLResponse("<h3>Invalid secret code. <a href='/'>Go Back</a></h3>")
     # conn = sqlite3.connect(DB_PATH)
-    # cursor = conn.cursor()
+   
     conn = psycopg2.connect(
         host=PG_HOST,
         dbname=PG_DB,
@@ -830,6 +830,7 @@ async def import_data(request: Request):
         password=PG_PASSWORD,
         port=PG_PORT
     )
+    cursor = conn.cursor()
     # Truncate old data before import
     cursor.execute("DELETE FROM assets")
     cursor.execute("DELETE FROM disposal_status_log")
