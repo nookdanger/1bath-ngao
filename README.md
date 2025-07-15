@@ -28,3 +28,10 @@ CREATE TABLE disposal_status_log (
     changed_by TEXT
 );
 
+
+
+ PGPASSWORD=8A9I3REUbc8tKzzAY3SKapz0nN4b5ZCm \
+psql -h dpg-d1lodf7diees73fu2pe0-a.oregon-postgres.render.com \
+     -U db_1bath_ngao_user \
+     -d db_1bath_ngao \
+     -p 5432

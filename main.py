@@ -823,6 +823,8 @@ async def upload_excel(request: Request, file: UploadFile):
     invalid_df = df[~df["valid_date"] | df["duplicate"]]
 
     valid_df["capitalized_date"] = pd.to_datetime(valid_df["capitalized_date"]).dt.strftime("%Y-%m-%d")
+    # 🔧 แปลง NaN เป็น None
+    valid_df = valid_df.where(pd.notnull(valid_df), None)
     cached_valid_data = valid_df.to_dict(orient='records')
 
     return templates.TemplateResponse("preview.html", {

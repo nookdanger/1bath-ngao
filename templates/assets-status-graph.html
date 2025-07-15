@@ -13,6 +13,7 @@
     const assets_data = {
       labels: {{ assets_labels | tojson }},
       datasets: [{
+        data: {{ assets_values.values() | list | tojson }},
         data: {{ assets_values | tojson }},
         backgroundColor: [
         '#FF6384',  // แดงชมพู
