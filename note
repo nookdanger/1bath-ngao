@@ -2,7 +2,7 @@ brew install python
 python3 -m ensurepip --upgrade
 python3 -m pip install fastapi uvicorn jinja2
 pip3 install fastapi uvicorn jinja2
-uvicorn main:app --reload
+python3 -m uvicorn main:app --reload
 
 -------------
 Step 1: ติดตั้ง Python (ถ้ายังไม่มี)

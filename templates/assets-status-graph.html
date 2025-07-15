@@ -7,13 +7,12 @@
 <body>
   <h2>สัดส่วนสถานะทรัพย์สิน</h2>
   <canvas id="assets" width="400" height="400"></canvas>
-
+<pre>{{ assets_values | safe }}</pre>
   <script>
 
     const assets_data = {
       labels: {{ assets_labels | tojson }},
       datasets: [{
-        data: {{ assets_values.values() | list | tojson }},
         data: {{ assets_values | tojson }},
         backgroundColor: [
         '#FF6384',  // แดงชมพู
