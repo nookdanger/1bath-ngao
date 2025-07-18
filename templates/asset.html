@@ -40,13 +40,14 @@ function previewImage(input, previewId) {
         document.getElementById("modalDisposalStatus").value = selectedValue;
         document.getElementById("modalDisposalDescription").value = statusText;
 
-        const modalElement = document.getElementById("statusModal");
-        if (modalElement) {
-          const modal = new bootstrap.Modal(modalElement);
-          modal.show();
-        } else {
-          console.error("Modal element not found!");
-        }
+        const showDateFields = ["6", "7", "8"].includes(selectedValue);
+        document.getElementById("startDateWrapper").style.display = showDateFields ? "block" : "none";
+        document.getElementById("endDateWrapper").style.display = showDateFields ? "block" : "none";
+        document.getElementById("modalStartDate").value = "";
+        document.getElementById("modalEndDate").value = "";
+
+        const modal = new bootstrap.Modal(document.getElementById("statusModal"));
+        modal.show();
       }
     }
 
@@ -313,10 +314,10 @@ function previewImage(input, previewId) {
             <th>เลขที่ผลิตภัณฑ์</th>
             <th>วันที่โอนเป็นทุน</th>
             <th>มูลค่าการได้มา</th>
-
             <th>สถานะสินทรัพย์</th>
             <th>สถานะดำเนินการ</th>
             <th>รูป</th>
+            <th>วันครบกำหนด</th>
             <th>อัปเดต</th>
           </tr>
         </thead>
@@ -409,6 +410,13 @@ function previewImage(input, previewId) {
                 {% endif %}
               </td>
               <td>
+  {% if asset.disposal_status_code in ["6", "7", "8"] and asset.end_date %}
+    {{ asset.end_date }}
+  {% else %}
+    -
+  {% endif %}
+            </td>
+              <td>
                 <input type="hidden" name="id" value="{{ asset['id'] }}">
                 <div class="d-flex gap-1">
 
@@ -455,7 +463,15 @@ function previewImage(input, previewId) {
         <div class="mb-3">
           <label class="form-label">เลขที่เอกสาร / ref เอกสาร:</label>
           <input type="text" name="ref_document" class="form-control" required id="modalRefDocument">
+        </div>
+        <div class="mb-3" id="startDateWrapper" style="display: none;">
+          <label class="form-label">วันที่เริ่มต้นการดำเนินการ (Start Date):</label>
+          <input type="date" name="start_date" class="form-control" id="modalStartDate">
+        </div>
 
+        <div class="mb-3" id="endDateWrapper" style="display: none;">
+          <label class="form-label">วันที่สิ้นสุดการดำเนินการ (End Date):</label>
+          <input type="date" name="end_date" class="form-control" id="modalEndDate" readonly>
         </div>
       </div>
       <div class="modal-footer">
@@ -470,38 +486,59 @@ function previewImage(input, previewId) {
       el.addEventListener("click", e => e.stopPropagation());
     });
   });
-  document.getElementById("logStatusForm").addEventListener("submit", async function (event) {
-    event.preventDefault(); // ป้องกันการ reload หน้า
+ document.getElementById("logStatusForm").addEventListener("submit", async function (event) {
+  event.preventDefault();
 
-    const assetId = document.getElementById("modalAssetId").value;
-    const statusCode = document.getElementById("modalDisposalStatus").value;
-    const statusDescription = document.getElementById("modalDisposalDescription").value;
-    const refDocument = document.getElementById("modalRefDocument").value;
+  const formData = new FormData();
+  formData.append("asset_id", document.getElementById("modalAssetId").value);
+  formData.append("status_code", document.getElementById("modalDisposalStatus").value);
+  formData.append("status_description", document.getElementById("modalDisposalDescription").value);
+  formData.append("ref_document", document.getElementById("modalRefDocument").value);
 
-    const formData = new FormData();
-    formData.append("asset_id", assetId);
-    formData.append("status_code", statusCode);
-    formData.append("status_description", statusDescription);
-    formData.append("ref_document", refDocument);
+  const startDate = document.getElementById("modalStartDate").value;
+  const endDate = document.getElementById("modalEndDate").value;
 
-    const response = await fetch("/log-status", {
-      method: "POST",
-      body: formData,
-    });
-
-    const result = await response.json();
-
-    if (result.message === "OK") {
-      const modalElement = bootstrap.Modal.getInstance(document.getElementById("statusModal"));
-      modalElement.hide();
-
-      // เคลียร์ค่า
-      document.getElementById("modalRefDocument").value = "";
-
+  if (["6", "7", "8"].includes(document.getElementById("modalDisposalStatus").value)) {
+    if (!startDate || !endDate) {
+      alert("กรุณากรอกวันที่เริ่มต้นให้ครบถ้วน");
+      return;
     }
+    formData.append("start_date", startDate);
+    formData.append("end_date", endDate);
+  }
 
+  const response = await fetch("/log-status", {
+    method: "POST",
+    body: formData,
   });
 
+  const result = await response.json();
+  if (result.message === "OK") {
+    bootstrap.Modal.getInstance(document.getElementById("statusModal")).hide();
+    document.getElementById("modalRefDocument").value = "";
+    document.getElementById("modalStartDate").value = "";
+    document.getElementById("modalEndDate").value = "";
+  }
+});
+
+
+    document.getElementById("modalStartDate").addEventListener("change", () => {
+    const startDateStr = document.getElementById("modalStartDate").value;
+    const statusCode = document.getElementById("modalDisposalStatus").value;
+    const endDateInput = document.getElementById("modalEndDate");
+
+    if (startDateStr && ["6", "7", "8"].includes(statusCode)) {
+      const startDate = new Date(startDateStr);
+      let daysToAdd = statusCode === "6" ? 60 : 15;
+
+      const endDate = new Date(startDate);
+      endDate.setDate(endDate.getDate() + daysToAdd);
+
+      endDateInput.value = endDate.toISOString().split("T")[0];
+    } else {
+      endDateInput.value = "";
+    }
+  });
   function validateStatus(assetId) {
 
     const assetStatus = document.getElementById(`select-asset_status-${assetId}`)?.value;

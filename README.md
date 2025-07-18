@@ -27,6 +27,10 @@ CREATE TABLE disposal_status_log (
     changed_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     changed_by TEXT
 );
+ALTER TABLE disposal_status_log
+ADD COLUMN start_date DATE,
+ADD COLUMN end_date DATE;
+
 
 
 

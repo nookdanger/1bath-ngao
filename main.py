@@ -123,7 +123,7 @@ def dashboard(
 
     # เงื่อนไข search
     if checkEmptyNone(search):
-        where_clauses.append("(description LIKE %s OR asset_id LIKE %s)")
+        where_clauses.append("(a.description LIKE %s OR a.asset_id LIKE %s)")
         keyword = f"%{search}%"
         params.extend([keyword, keyword])
 
@@ -140,11 +140,24 @@ def dashboard(
         where_clauses.append("asset_status = %s")
         params.append(asset_status)
 
-    # สร้าง SQL
-    sql = "SELECT * FROM assets"
+    # ✅ JOIN disposal_status_log เฉพาะ log ล่าสุดของ status 6-8
+    sql = """
+        SELECT 
+            a.*, 
+            l.end_date AS end_date, 
+            l.status_code AS disposal_status_code
+        FROM assets a
+        LEFT JOIN (
+            SELECT DISTINCT ON (asset_id)
+                asset_id, end_date, status_code, changed_at
+            FROM disposal_status_log
+            WHERE status_code IN ('6', '7', '8')
+            ORDER BY asset_id, changed_at DESC
+        ) l ON a.id::text = l.asset_id
+    """
     if where_clauses:
         sql += " WHERE " + " AND ".join(where_clauses)
-    sql += " ORDER BY book_value, id"
+    sql += " ORDER BY a.book_value, a.id"
 
     # print(sql, params)  # debug ได้ถ้าต้องการ
     cursor.execute(sql, tuple(params))
@@ -488,7 +501,7 @@ def asset_detail(request: Request, id: int,cost_center:str="",disposal_status:st
     asset = cursor.fetchone()
 
     cursor.execute("""
-        SELECT id,status_code, status_description, ref_document, changed_at,asset_id
+       SELECT id, status_code, status_description, ref_document, changed_at, asset_id, end_date
         FROM disposal_status_log
         WHERE asset_id = %s
         ORDER BY changed_at
@@ -512,9 +525,10 @@ def log_disposal_status(
     status_code: str = Form(...),
     status_description: str = Form(...),
     ref_document: str = Form(...),
-    changed_by: str = Form("system")  # default เป็น system หรือใส่ user ได้
+    start_date: str = Form(None),  # วันที่เริ่มต้น (nullable)
+    end_date: str = Form(None),    # วันที่สิ้นสุด (nullable)
+    changed_by: str = Form("system")
 ):
-    # conn = sqlite3.connect(DB_PATH)
     conn = psycopg2.connect(
         host=PG_HOST,
         dbname=PG_DB,
@@ -522,33 +536,53 @@ def log_disposal_status(
         password=PG_PASSWORD,
         port=PG_PORT
     )
-    # conn.row_factory = sqlite3.Row
     cursor = conn.cursor(cursor_factory=RealDictCursor)
 
-    # เช็คว่ามี log เดิมไหม
+    # ตรวจสอบว่ามี log เดิมอยู่หรือไม่
     cursor.execute("""
         SELECT id FROM disposal_status_log
         WHERE asset_id = %s AND status_code = %s
     """, (asset_id, status_code))
     row = cursor.fetchone()
 
-    now = datetime.utcnow().isoformat()
+    now = datetime.utcnow()
 
     if row:
-        # update log เดิม
+        # อัปเดต log เดิม
         cursor.execute("""
             UPDATE disposal_status_log
-            SET ref_document = %s, changed_at = %s, changed_by = %s
+            SET ref_document = %s,
+                start_date = %s,
+                end_date = %s,
+                changed_at = %s,
+                changed_by = %s
             WHERE id = %s
-        """, (ref_document, now, changed_by, row["id"]))
+        """, (
+            ref_document,
+            start_date if start_date else None,
+            end_date if end_date else None,
+            now,
+            changed_by,
+            row["id"]
+        ))
     else:
-        # insert ใหม่
+        # เพิ่ม log ใหม่
         cursor.execute("""
             INSERT INTO disposal_status_log (
                 asset_id, status_code, status_description,
-                ref_document, changed_at, changed_by
-            ) VALUES (%s, %s, %s, %s, %s, %s)
-        """, (asset_id, status_code, status_description, ref_document, now, changed_by))
+                ref_document, start_date, end_date,
+                changed_at, changed_by
+            ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
+        """, (
+            asset_id,
+            status_code,
+            status_description,
+            ref_document,
+            start_date if start_date else None,
+            end_date if end_date else None,
+            now,
+            changed_by
+        ))
 
     conn.commit()
     conn.close()
