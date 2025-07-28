@@ -181,7 +181,9 @@
   {% for log in logs %}
   <form method="POST" action="/assets/{{ log['asset_id']}}/{{ log['id'] }}/edit-ref?cost_center={{ cost_center }}&disposal_status={{ disposal_status }}&asset_status={{ asset_status }}">
     <tr>
-      <td>{{ log["changed_at"] }}</td>
+    <td>{{ log["changed_at"].strftime('%d/%m/%Y') }}</td>
+
+      
       <td><span class="badge bg-primary">{{ log["status_description"] }}</span></td>
       <td>
         <input type="text" id="ref_{{ log['id'] }}" name="ref_document" value="{{ log['ref_document'] }}" class="form-control" required disabled>

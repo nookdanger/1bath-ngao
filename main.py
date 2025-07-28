@@ -722,9 +722,16 @@ from typing import List
 async def report_create(
     request: Request,
     select: List[str] = Form(...),
-    cost_center: str = Form("")
+    cost_center: str = Form(""),
+    from_a: str = Form(""),
+    to: str = Form(""),
+    attention: str = Form(""),
+    signature: str = Form(""),
+    position: str = Form(""),
+     tel: str = Form(""),
 ):
     print("Selected asset IDs:", select)
+    print("from_a:",from_a)
 
     # conn = sqlite3.connect(DB_PATH)
     # conn.row_factory = sqlite3.Row
@@ -745,11 +752,17 @@ async def report_create(
     conn.close()
 
     return templates.TemplateResponse("report-result.html", {
+        "from_a": from_a,
+        "to": to,
+        "attention": attention,
+        "signature": signature,
         "cost_center": cost_center,
+        "position":position,
         "request": request,
         "assets": rows,
         "today_date": datetime.today().strftime('%d/%m/%Y') , # 🗓️ ส่งวันที่วันนี้
-        "cost_center_mapping": cost_center_mapping
+        "cost_center_mapping": cost_center_mapping,
+        "tel":tel
     })
 
 

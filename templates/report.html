@@ -135,9 +135,12 @@
     <!-- ปุ่มพิมพ์ + Generate Report -->
     <form method="post" action="/report-create">
       <div class="mb-3 d-flex gap-2 d-print-none">
-        <button type="submit" class="btn btn-success">
+        <!-- <button type="submit" class="btn btn-success">
           📄 Generate Report
-        </button>
+        </button> -->
+        <button type="button" class="btn btn-success" data-bs-toggle="modal" data-bs-target="#reportModal">
+        📄 Generate Report
+      </button>
       </div>
 <input type="hidden" name="cost_center" value="{{cost_center}}">
       <table class="table table-bordered table-striped align-middle">
@@ -172,7 +175,58 @@
           {% endfor %}
         </tbody>
       </table>
+      <!-- Modal -->
+<div class="modal fade" id="reportModal" tabindex="-1" aria-labelledby="reportModalLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <form method="post" action="/generate-final-report">
+        <div class="modal-header">
+          <h5 class="modal-title" id="reportModalLabel">กรอกข้อมูลสร้างรายงาน</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+
+        <div class="modal-body">
+          <div class="mb-3">
+            <label for="from" class="form-label">จาก</label>
+            <input type="text" class="form-control" id="from_a" name="from_a" required>
+          </div>
+          <div class="mb-3">
+            <label for="to" class="form-label">ถึง</label>
+            <input type="text" class="form-control" id="to" name="to" required>
+          </div>
+          <div class="mb-3">
+            <label for="attention" class="form-label">เรียน</label>
+            <input type="text" class="form-control" id="attention" name="attention" required>
+          </div>
+          <div class="mb-3">
+            <label for="signature" class="form-label">ลงชื่อ</label>
+            <input type="text" class="form-control" id="signature" name="signature" required>
+          </div>
+           <div class="mb-3">
+            <label for="signature" class="form-label">ตำแหน่ง</label>
+            <input type="text" class="form-control" id="position" name="position" required>
+          </div>
+          <div class="mb-3">
+            <label for="cost_center" class="form-label">แผนก</label>
+            <input type="text" class="form-control" id="tel" name="cost_center" required>
+          </div>
+          <div class="mb-3">
+            <label for="tel" class="form-label">เบอร์โทร</label>
+            <input type="text" class="form-control" id="tel" name="tel" required>
+          </div>
+
+       
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">ยกเลิก</button>
+          <button type="submit" class="btn btn-primary">✅ สร้างรายงาน</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
     </form>
   </div>
 </body>
+
 </html>

@@ -410,11 +410,12 @@ function previewImage(input, previewId) {
                 {% endif %}
               </td>
               <td>
-  {% if asset.disposal_status_code in ["6", "7", "8"] and asset.end_date %}
-    {{ asset.end_date }}
-  {% else %}
-    -
-  {% endif %}
+{% if asset.disposal_status_code in ["6", "7", "8"] and asset.end_date %}
+  {{ asset.end_date.strftime('%d/%m/%Y') }}
+{% else %}
+  -
+{% endif %}
+
             </td>
               <td>
                 <input type="hidden" name="id" value="{{ asset['id'] }}">

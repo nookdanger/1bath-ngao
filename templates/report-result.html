@@ -156,10 +156,10 @@
   <table>
     <tr>
       <td>จาก</td>
-      <td>{{ cost_center_mapping.get(cost_center, "-") }}</td>
+      <td>{{ from_a }}</td>
       <td style="width: 60px;"></td>
       <td>ถึง</td>
-      <td>{{ to_unit }}</td>
+      <td>{{ to }}</td>
     </tr>
     <tr>
       <td>เลขที่</td>
@@ -177,7 +177,7 @@
     </tr>
     <tr>
       <td>เรียน</td>
-      <td>หัวหน้าหน่วยงานบัญชี</td>
+      <td>{{ attention }}</td>
       <td></td>
       <td colspan="2"></td>
     </tr>
@@ -204,9 +204,19 @@
   </p>
 
   <br><br><br>
-  <p>..................................................</p>
-  <p>(ลงชื่อ) หัวหน้าหน่วยงาน / ผู้รักษาการแทน / ผู้ปฏิบัติงานแทน</p>
+<div style="display: flex; justify-content: flex-end; margin-top: 60px;">
+  <div style="width: 300px; text-align: right;">
+    <p>..................................................</p>
+    <p style="text-align: center;">({{ signature }})</p>
+    <p style="text-align: center;">{{ position }}</p>
   </div>
+</div>
+<div style="display: flex; justify-content: flex-end; margin-top: 60px;flex-direction: column;">
+  <div style="width: 300px; text-align: left;">
+    <p style="text-align: left;">{{ cost_center }}</p>
+    <p style="text-align: left;">{{ tel }}</p>
+  </div>
+</div>
     <div>
     <button onclick="window.print()" style="margin-bottom: 20px;">
     🖨️ พิมพ์เอกสาร
