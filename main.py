@@ -661,6 +661,7 @@ async def download_files(request: Request):
 async def download_files(request: Request):
     otherFiles = [
         {"name": "แนวทางการจัดทำหนังสือขออนุมัติจำหน่ายทร.pdf", "url": "/static/แนวทางการจัดทำหนังสือขออนุมัติจำหน่ายทร.pdf"},
+         {"name": "หลักเกณฑ์และวิธีปฏิบัติเกี่ยวกับการควบค.pdf", "url": "/static/หลักเกณฑ์และวิธีปฏิบัติเกี่ยวกับการควบค.pdf"},
     ]
     
     return templates.TemplateResponse("downloads-other.html", {"request": request, "otherFiles": otherFiles})

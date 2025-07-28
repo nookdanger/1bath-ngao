@@ -40,13 +40,20 @@ function previewImage(input, previewId) {
         document.getElementById("modalDisposalStatus").value = selectedValue;
         document.getElementById("modalDisposalDescription").value = statusText;
 
-        const showDateFields = ["6", "7", "8"].includes(selectedValue);
+        const showDateFields = ["7", "8", "9"].includes(selectedValue);
         document.getElementById("startDateWrapper").style.display = showDateFields ? "block" : "none";
         document.getElementById("endDateWrapper").style.display = showDateFields ? "block" : "none";
         document.getElementById("modalStartDate").value = "";
         document.getElementById("modalEndDate").value = "";
 
         const modal = new bootstrap.Modal(document.getElementById("statusModal"));
+        if(selectedValue == "8"){
+          document.getElementById("label_start").innerText = "วันที่ส่งมอบ";
+        }else if(selectedValue == "9"){
+          document.getElementById("label_start").innerText = "วันที่ตัดจำหน่าย";
+        }else {
+          document.getElementById("label_start").innerText = "วันที่อนุมัติจำหน่าย";
+        }
         modal.show();
       }
     }
@@ -466,12 +473,12 @@ function previewImage(input, previewId) {
           <input type="text" name="ref_document" class="form-control" required id="modalRefDocument">
         </div>
         <div class="mb-3" id="startDateWrapper" style="display: none;">
-          <label class="form-label">วันที่เริ่มต้นการดำเนินการ (Start Date):</label>
+          <label class="form-label" id="label_start">วันที่อนุมัติจำหน่าย:</label>
           <input type="date" name="start_date" class="form-control" id="modalStartDate">
         </div>
 
         <div class="mb-3" id="endDateWrapper" style="display: none;">
-          <label class="form-label">วันที่สิ้นสุดการดำเนินการ (End Date):</label>
+          <label class="form-label">วันที่ครบกำหนด:</label>
           <input type="date" name="end_date" class="form-control" id="modalEndDate" readonly>
         </div>
       </div>
